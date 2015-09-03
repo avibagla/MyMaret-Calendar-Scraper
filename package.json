@@ -1,0 +1,26 @@
+{
+  "name": "maretcalendarscraper",
+  "version": "1.0.0",
+  "description": "A scraper for the Maret mobile calendar site",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nickster28/MaretCalendarScraper.git"
+  },
+  "author": "Nick Troccoli",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Nickster28/MaretCalendarScraper/issues"
+  },
+  "homepage": "https://github.com/Nickster28/MaretCalendarScraper#readme",
+  "dependencies": {
+    "express": "^4.13.3"
+  },
+  "engines": {
+    "node": "0.12.x"
+  }
+}
