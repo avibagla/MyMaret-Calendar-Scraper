@@ -79,7 +79,7 @@ app.get('/scrapeCalendars', function(req, res) {
         var athleticsCalendarData = response[1];
 
         res.json({
-            //"Upper School": upperSchoolCalendarData,
+            "Upper School": upperSchoolCalendarData,
             "Athletics": athleticsCalendarData
         });
     }, function(error) {
