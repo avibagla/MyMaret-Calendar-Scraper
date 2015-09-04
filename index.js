@@ -72,8 +72,8 @@ Note that only the eventName field is guaranteed to be non-null.
 app.get('/scrapeCalendars', function(req, res) {
 
     // Scrape both the upper school and athletics calendars, and send back the parsed data
-    var upperSchoolCalendarPromise = scrapeMaretCalendar(UPPER_SCHOOL_CALENDAR_URL, parseUpperSchoolCalendarEvent);
-    var athleticsCalendarPromise = scrapeMaretCalendar(ATHLETICS_CALENDAR_URL, parseAthleticsCalendarEvent);
+    var upperSchoolCalendarPromise = scrapeMaretCalendar(UPPER_SCHOOL_CALENDAR_URL, scrapeUpperSchoolCalendarEvent);
+    var athleticsCalendarPromise = scrapeMaretCalendar(ATHLETICS_CALENDAR_URL, scrapeAthleticsCalendarEvent);
 
     Promise.all([upperSchoolCalendarPromise, athleticsCalendarPromise]).then(function(response) {
         var upperSchoolCalendarData = response[0];
@@ -115,8 +115,8 @@ function getHTMLForURL(url) {
 /* FUNCTION: scrapeMaretCalendar
 ----------------------------------------
 Parameters:
-    calendarURL - URL of the Maret calendar page to parse
-    parseCalendarEvent - function that takes a Cheerio DOM element representing
+    calendarURL - URL of the Maret calendar page to scrape
+    scrapeCalendarEvent - function that takes a Cheerio DOM element representing
                         a single calendar event, and the Cheerio DOM parser for
                         this page, and returns a JS object containing all the
                         event information.
@@ -126,10 +126,10 @@ Returns: a promise passing back the JS representation of the given calendar.
 Scrapes the HTML from the given calendar page, and passes back (via promise) 
 the JS representation.  The format consists of an array containing a dictionary 
 for each day's events.  The JS dictonary format for each day is defined by the 
-parseMaretCalendarDay function.
+scrapeMaretCalendarDay function.
 ----------------------------------------
 */
-function scrapeMaretCalendar(calendarURL, parseCalendarEvent) {
+function scrapeMaretCalendar(calendarURL, scrapeCalendarEvent) {
     return getHTMLForURL(calendarURL).then(function(html) {
         var $ = cheerio.load(html);
 
@@ -140,7 +140,7 @@ function scrapeMaretCalendar(calendarURL, parseCalendarEvent) {
         $('.calendar-day').each(function(index, elem) {
             var savedThis = this;
             promise = promise.then(function() {
-                return parseMaretCalendarDay($(savedThis), $, parseCalendarEvent);
+                return parseMaretCalendarDay($(savedThis), $, scrapeCalendarEvent);
             }).then(function(calendarDayInfo) {
                 dayList.push(calendarDayInfo);
                 return dayList;
@@ -157,7 +157,7 @@ function scrapeMaretCalendar(calendarURL, parseCalendarEvent) {
 Parameters:
     calendarDay - the DOM element representing a single day in the calendar.
     $ - the Cheerio object to use to traverse this DOM
-    parseCalendarEvent - function that takes a Cheerio DOM element representing
+    scrapeCalendarEvent - function that takes a Cheerio DOM element representing
                         a single calendar event, and the Cheerio DOM parser for
                         this page, and returns a JS object containing all the
                         event information.
@@ -176,10 +176,10 @@ Returns: a promise passing along the JS representation of this day.  The data
 }
 
 The JS dictonary format for each event is defined by the return value of
-the given parseCalendarEvent function.
+the given scrapeCalendarEvent function.
 --------------------------------------
 */
-function parseMaretCalendarDay(calendarDay, $, parseCalendarEvent) {
+function parseMaretCalendarDay(calendarDay, $, scrapeCalendarEvent) {
 
     // Make the JSON object for this day (list of events,
     // and date information that's added later)
@@ -199,7 +199,7 @@ function parseMaretCalendarDay(calendarDay, $, parseCalendarEvent) {
 
         // Otherwise, call the given event parser to generate a dictionary
         } else {
-            var eventJSON = parseCalendarEvent(li, $);
+            var eventJSON = scrapeCalendarEvent(li, $);
             calendarDayInfo.events.push(eventJSON);
         }
     });
@@ -208,7 +208,7 @@ function parseMaretCalendarDay(calendarDay, $, parseCalendarEvent) {
 }
 
 
-/* FUNCTION: parseUpperSchoolCalendarEvent
+/* FUNCTION: scrapeUpperSchoolCalendarEvent
 ------------------------------
 Parameters:
     calendarEvent - the DOM element representing a single calendar event from
@@ -228,9 +228,9 @@ Returns: a JS representation of the information about this event.
 The start time, end time, and event location are optional and may be null.
 -----------------------------
 */
-function parseUpperSchoolCalendarEvent(calendarEvent, $) {
+function scrapeUpperSchoolCalendarEvent(calendarEvent, $) {
 
-    var eventJSON = {
+    var eventInfo = {
         eventName: calendarEvent.find("h3").text().trim(),
         eventStartTime: null,
         eventEndTime: null,
@@ -241,16 +241,16 @@ function parseUpperSchoolCalendarEvent(calendarEvent, $) {
     // and location of the event.  Eg. "3:30pm - 4:30pm - Old Gym"
     var eventInfoArray = calendarEvent.find("h6").text().split(" - ");
     if (eventInfoArray.length == 3) {
-        eventJSON.eventStartTime = eventInfoArray[0].trim();
-        eventJSON.eventEndTime = eventInfoArray[1].trim();
-        eventJSON.eventLocation = eventInfoArray[2].trim(); 
+        eventInfo.eventStartTime = eventInfoArray[0].trim();
+        eventInfo.eventEndTime = eventInfoArray[1].trim();
+        eventInfo.eventLocation = eventInfoArray[2].trim(); 
     }
 
-    return eventJSON;
+    return eventInfo;
 }
 
 
-/* FUNCTION: parseAthleticsCalendarEvent
+/* FUNCTION: scrapeAthleticsCalendarEvent
 ----------------------------------------
 Parameters:
     calendarEvent - the DOM element representing a single calendar event from
@@ -278,9 +278,9 @@ and there can be a non-null gameLocation if the game is played at a home facilit
 besides the main school campus.  
 -----------------------------------------
 */
-function parseAthleticsCalendarEvent(calendarEvent, $) {
+function scrapeAthleticsCalendarEvent(calendarEvent, $) {
     
-    var gameJSON = {
+    var gameInfo = {
         maretTeam: null,
         maretTeamID: null,
         opponent: null,
@@ -305,45 +305,45 @@ function parseAthleticsCalendarEvent(calendarEvent, $) {
     var teamNames;
     if (gameTitle.indexOf(" vs. ") != -1) {
         teamNames = gameTitle.split(" vs. ");
-        gameJSON.isHome = true;
+        gameInfo.isHome = true;
     } else if (gameTitle.indexOf(" at ") != -1) {
         teamNames = gameTitle.split(" at ");
-        gameJSON.isHome = false;
+        gameInfo.isHome = false;
     } else {
         teamNames = [gameTitle];
-        gameJSON.isHome = false;
+        gameInfo.isHome = false;
     }
 
-    gameJSON.maretTeam = teamNames[0].trim();
-    if (teamNames.length > 1) gameJSON.opponent = teamNames[1].trim();
+    gameInfo.maretTeam = teamNames[0].trim();
+    if (teamNames.length > 1) gameInfo.opponent = teamNames[1].trim();
 
 
     // STEP 2: parse the detail label for game time and optional location
     // -----------------------------
     if (gameDetails != "" && gameDetails.indexOf("At") != -1) {
         var detailsList = gameDetails.split("At");
-        gameJSON.gameTime = detailsList[0].trim();
-        gameJSON.gameLocation = detailsList[1].trim();
-        gameJSON.hasAddress = false;
+        gameInfo.gameTime = detailsList[0].trim();
+        gameInfo.gameLocation = detailsList[1].trim();
+        gameInfo.hasAddress = false;
     } else if (gameDetails != "") {
-        gameJSON.gameTime = gameDetails;
+        gameInfo.gameTime = gameDetails;
     }
 
 
     // STEP 3: parse the game detail url
     // -----------------------------------
     var gameURL = calendarEvent.find("a").attr("href");
-    gameJSON.maretTeamID = parseInt(gameURL.split("TeamID=")[1]);
+    gameInfo.maretTeamID = parseInt(gameURL.split("TeamID=")[1]);
 
     // Some teams are always away
-    if (AWAY_TEAM_IDS.indexOf(gameJSON.maretTeamID) != -1) gameJSON.isHome = false;
+    if (AWAY_TEAM_IDS.indexOf(gameInfo.maretTeamID) != -1) gameInfo.isHome = false;
 
 
     // STEP 4: parse the game detail screen
     // -------------------------------------
 
 
-    return gameJSON;
+    return gameInfo;
 }
 
 
