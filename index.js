@@ -10,7 +10,7 @@ var CALENDAR_URL_BASE = "https://www.maret.org/mobile/";
 var UPPER_SCHOOL_CALENDAR_URL = CALENDAR_URL_BASE + "index.aspx?v=c&mid=120&t=Upper%20School";
 var ATHLETICS_CALENDAR_URL = CALENDAR_URL_BASE + "index.aspx?v=c&mid=126&t=Athletic%20Events";
 
-var AWAY_TEAM_IDS = [1185, 1186]; // XC, Golf are always away
+var AWAY_TEAM_IDS = [1186]; // Golf is always away
 
 
 /* ENDPOINT: /scrape
@@ -342,15 +342,31 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
     var gameURL = calendarEvent.find("a").attr("href");
     gameInfo.maretTeamID = parseInt(gameURL.split("TeamID=")[1]);
 
-    // Some teams are always away
+    // Some teams are always away, even if the parsing says otherwise
     if (AWAY_TEAM_IDS.indexOf(gameInfo.maretTeamID) != -1) gameInfo.isHome = false;
 
 
     // STEP 4: parse the game detail screen
     // -------------------------------------
-    //return getHTMLForURL()
+    return getHTMLForURL(CALENDAR_URL_BASE + gameURL).then(function(html) {
+        $ = cheerio.load(html);
 
-    return gameInfo;
+        // If there's a directions div or an address field (Jelleff), scrape the address
+        var addressArray = $(".directions-container").text().split("School Name: ");
+        if (addressArray.length == 2) {
+            gameInfo.gameLocation = addressArray[1].trim();
+            gameInfo.hasAddress = true;
+        } else {
+            var address = $("address").text();
+            if (address != "") {
+                gameInfo.gameLocation = address;
+                gameInfo.hasAddress = true;
+            }
+        }
+
+    }).then(function() {
+        return gameInfo;
+    });
 }
 
 
