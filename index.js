@@ -6,8 +6,9 @@ var app = express();
 app.set('port', (process.env.PORT || 5000));
 
 
-var UPPER_SCHOOL_CALENDAR_URL = "https://www.maret.org/mobile/index.aspx?v=c&mid=120&t=Upper%20School";
-var ATHLETICS_CALENDAR_URL = "https://www.maret.org/mobile/index.aspx?v=c&mid=126&t=Athletic%20Events";
+var CALENDAR_URL_BASE = "https://www.maret.org/mobile/";
+var UPPER_SCHOOL_CALENDAR_URL = CALENDAR_URL_BASE + "index.aspx?v=c&mid=120&t=Upper%20School";
+var ATHLETICS_CALENDAR_URL = CALENDAR_URL_BASE + "index.aspx?v=c&mid=126&t=Athletic%20Events";
 
 var AWAY_TEAM_IDS = [1185, 1186]; // XC, Golf are always away
 
@@ -187,6 +188,8 @@ function scrapeMaretCalendarDay(calendarDay, $, scrapeCalendarEvent) {
         events: []
     };
 
+    var promise = Promise.resolve();
+
     calendarDay.find("li").each(function(i, elem) {
         var savedThis = this;
         var li = $(savedThis);
@@ -199,12 +202,16 @@ function scrapeMaretCalendarDay(calendarDay, $, scrapeCalendarEvent) {
 
         // Otherwise, call the given event parser to generate a dictionary
         } else {
-            var eventJSON = scrapeCalendarEvent(li, $);
-            calendarDayInfo.events.push(eventJSON);
+            promise = promise.then(function() {
+                return scrapeCalendarEvent(li, $);
+            }).then(function(eventInfo) {
+                calendarDayInfo.events.push(eventInfo);
+                return calendarDayInfo;
+            });
         }
     });
 
-    return calendarDayInfo;
+    return promise;
 }
 
 
@@ -341,7 +348,7 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
 
     // STEP 4: parse the game detail screen
     // -------------------------------------
-
+    //return getHTMLForURL()
 
     return gameInfo;
 }
