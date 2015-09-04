@@ -348,7 +348,7 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
 
     // STEP 4: parse the game detail screen
     // -------------------------------------
-    return getHTMLForURL()
+    //return getHTMLForURL()
 
     return gameInfo;
 }
