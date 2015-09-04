@@ -116,7 +116,7 @@ function getHTMLForURL(url) {
 ----------------------------------------
 Parameters:
     calendarURL - URL of the Maret calendar page to parse
-    calendarEventParser - function that takes a Cheerio DOM element representing
+    parseCalendarEvent - function that takes a Cheerio DOM element representing
                         a single calendar event, and the Cheerio DOM parser for
                         this page, and returns a JS object containing all the
                         event information.
@@ -125,7 +125,45 @@ Returns: a promise passing back the JS representation of the given calendar.
 
 Scrapes the HTML from the given calendar page, and passes back (via promise) 
 the JS representation.  The format consists of an array containing a dictionary 
-for each day's events.  The data format for each day is as follows:
+for each day's events.  The JS dictonary format for each day is defined by the 
+parseMaretCalendarDay function.
+----------------------------------------
+*/
+function scrapeMaretCalendar(calendarURL, parseCalendarEvent) {
+    return getHTMLForURL(calendarURL).then(function(html) {
+        var $ = cheerio.load(html);
+
+        var promise = Promise.resolve();
+
+        // Gather up event data for each day
+        var dayList = [];
+        $('.calendar-day').each(function(index, elem) {
+            var savedThis = this;
+            promise = promise.then(function() {
+                return parseMaretCalendarDay($(savedThis), $, parseCalendarEvent);
+            }).then(function(calendarDayInfo) {
+                dayList.push(calendarDayInfo);
+                return dayList;
+            });
+        });
+
+        return promise;
+    });
+}
+
+
+/* FUNCTION: parseMaretCalendarDay
+-------------------------------------
+Parameters:
+    calendarDay - the DOM element representing a single day in the calendar.
+    $ - the Cheerio object to use to traverse this DOM
+    parseCalendarEvent - function that takes a Cheerio DOM element representing
+                        a single calendar event, and the Cheerio DOM parser for
+                        this page, and returns a JS object containing all the
+                        event information.
+
+Returns: a promise passing along the JS representation of this day.  The data
+        format is as follows:
 
 {
     "month": "September",
@@ -138,46 +176,35 @@ for each day's events.  The data format for each day is as follows:
 }
 
 The JS dictonary format for each event is defined by the return value of
-the given calendarEventParser function.
-----------------------------------------
+the given parseCalendarEvent function.
+--------------------------------------
 */
-function scrapeMaretCalendar(calendarURL, calendarEventParser) {
-    return getHTMLForURL(calendarURL).then(function(html) {
-        var $ = cheerio.load(html);
+function parseMaretCalendarDay(calendarDay, $, parseCalendarEvent) {
 
-        // Gather up event data for each day
-        var eventsData = [];
-        $('.calendar-day').each(function(index, elem) {
-            var calendarDay = $(this);
+    // Make the JSON object for this day (list of events,
+    // and date information that's added later)
+    var calendarDayInfo = {
+        events: []
+    };
 
-            // Make the JSON object for this day (list of events,
-            // and date information that's added later)
-            var calendarDayJSON = {
-                events: []
-            };
+    calendarDay.find("li").each(function(i, elem) {
+        var savedThis = this;
+        var li = $(savedThis);
+        // First elem is date header
+        if (i == 0) {
+            calendarDayInfo.month = li.find(".month").text().trim();
+            calendarDayInfo.date = parseInt(li.find(".date").text())
+            calendarDayInfo.year = parseInt(li.find(".year").text());
+            calendarDayInfo.day = li.text().split(" - ")[1];
 
-            calendarDay.find("li").each(function(i, elem) {
-                var li = $(this);
-
-                // First elem is date header
-                if (i == 0) {
-                    calendarDayJSON.month = li.find(".month").text().trim();
-                    calendarDayJSON.date = parseInt(li.find(".date").text())
-                    calendarDayJSON.year = parseInt(li.find(".year").text());
-                    calendarDayJSON.day = li.text().split(" - ")[1];
-
-                // Otherwise, call the given event parser to generate a dictionary
-                } else {
-                    var eventJSON = calendarEventParser(li, $);
-                    calendarDayJSON.events.push(eventJSON);
-                }
-            });
-
-            eventsData.push(calendarDayJSON);
-        });
-
-        return eventsData;
+        // Otherwise, call the given event parser to generate a dictionary
+        } else {
+            var eventJSON = parseCalendarEvent(li, $);
+            calendarDayInfo.events.push(eventJSON);
+        }
     });
+
+    return calendarDayInfo;
 }
 
 
@@ -304,11 +331,17 @@ function parseAthleticsCalendarEvent(calendarEvent, $) {
 
 
     // STEP 3: parse the game detail url
+    // -----------------------------------
     var gameURL = calendarEvent.find("a").attr("href");
     gameJSON.maretTeamID = parseInt(gameURL.split("TeamID=")[1]);
 
     // Some teams are always away
     if (AWAY_TEAM_IDS.indexOf(gameJSON.maretTeamID) != -1) gameJSON.isHome = false;
+
+
+    // STEP 4: parse the game detail screen
+    // -------------------------------------
+
 
     return gameJSON;
 }
