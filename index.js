@@ -44,15 +44,16 @@ depends on the calendar the event is from.  Athletic events have the format:
 {
     "maretTeam": "Girls' Varsity Soccer",
     "opponent": "Potomac School",
-    "gameStartTime": "3:00pm",
+    "gameTime": "3:00pm",
     "isHome": false,
     "gameLocation": "1301 Potomac School Road, McLean, VA 22101"
     "hasAddress": true
 }
 
-Note that the gameLocation field is the only field that can be null (indicating a regular
-home game).  The game location can be an address (in which case hasAddress is true) 
-or a name of a place if there is no address provided.  Note that isHome can be true 
+Note that opponent, gameTime, gameLocation, and hasAdress may be null (if gameLocation is null,
+indicating a standard home game, then hasAddress will also be null).  For off-campus games,
+the game location can be an address (hasAddress is true) or a name of a place if 
+there is no address provided (hasAddress is false).  Note that isHome can be true 
 and there can be a non-null gameLocation if the game is played at a home facility 
 besides the main school campus.  
 
@@ -242,10 +243,12 @@ Returns: a JSON representation of the information about this event.
     "hasAddress": true
 }
 
-All fields are non-null except for the gameLocation, which may be null for a home game.
-The hasAddress field indicates whether the gameLocation is an address string that can be
-looked up, or just a place name.  Note that gameLocation can be non-null when isHome is
-true - this indicates the game is at a location other than the default school campus.
+Note that opponent, gameTime, gameLocation, and hasAdress may be null (if gameLocation is null,
+indicating a standard home game, then hasAddress will also be null).  For off-campus games,
+the game location can be an address (hasAddress is true) or a name of a place if 
+there is no address provided (hasAddress is false).  Note that isHome can be true 
+and there can be a non-null gameLocation if the game is played at a home facility 
+besides the main school campus.  
 -----------------------------------------
 */
 function parseAthleticsCalendarEvent(calendarEvent, $) {
