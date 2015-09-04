@@ -140,7 +140,7 @@ function scrapeMaretCalendar(calendarURL, scrapeCalendarEvent) {
         $('.calendar-day').each(function(index, elem) {
             var savedThis = this;
             promise = promise.then(function() {
-                return parseMaretCalendarDay($(savedThis), $, scrapeCalendarEvent);
+                return scrapeMaretCalendarDay($(savedThis), $, scrapeCalendarEvent);
             }).then(function(calendarDayInfo) {
                 dayList.push(calendarDayInfo);
                 return dayList;
@@ -152,7 +152,7 @@ function scrapeMaretCalendar(calendarURL, scrapeCalendarEvent) {
 }
 
 
-/* FUNCTION: parseMaretCalendarDay
+/* FUNCTION: scrapeMaretCalendarDay
 -------------------------------------
 Parameters:
     calendarDay - the DOM element representing a single day in the calendar.
@@ -179,7 +179,7 @@ The JS dictonary format for each event is defined by the return value of
 the given scrapeCalendarEvent function.
 --------------------------------------
 */
-function parseMaretCalendarDay(calendarDay, $, scrapeCalendarEvent) {
+function scrapeMaretCalendarDay(calendarDay, $, scrapeCalendarEvent) {
 
     // Make the JSON object for this day (list of events,
     // and date information that's added later)
