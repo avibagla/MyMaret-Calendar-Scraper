@@ -78,21 +78,21 @@ depends on the calendar the event is from.  Athletic events have the format:
 {
     "gameName": null,
     "maretTeam": "Girls' Varsity Soccer",
-    "opponent": "Potomac School",
+    "opponent": "Froggie School",
     "gameTime": "3:00pm",
     "dismissalTime": "2:00pm",
     "returnTime": "5:00pm",
     "isHome": false,
-    "gameAddress": "1301 Potomac School Road, McLean, VA 22101"
+    "gameAddress": "1254 Lakeside Dr. Potomac, MD 20156"
     "gameLocation": null
 }
 
 maretTeam and isHome are guaranteed to be non-null.  gameAddress is a mappable address.
-gameLocation is only the name of a place (e.g. Jelleff).  Note that isHome can be 
+gameLocation is only the name of a place.  Note that isHome can be 
 true and there can be a non-null gameLocation and gameAddress if the game is 
 played at a home facility besides the main school campus.  gameName is the special 
 name for this event (if any - most games will not have one, but some, such as 
-cross country meets, have names like "Landon Invitational".)
+cross country meets, have names like "Cross Country Invitational".)
 
 Upper School calendar events have the format:
 
@@ -385,12 +385,12 @@ Returns: a JSON representation of the information about this event.
     "eventInfo": {
         "gameName": null,
         "maretTeam": "Girls' Varsity Soccer",
-        "opponent": "Potomac School",
+        "opponent": "Froggie School",
         "gameTime": "3:00pm",
         "dismissalTime": "2:00pm",
         "returnTime": "5:00pm",
         "isHome": false,
-        "gameAddress": "1301 Potomac School Road, McLean, VA 22101"
+        "gameAddress": "1254 Lakeside Dr. Potomac, MD 20152"
         "gameLocation": null
     },
     "dateInfo": {
