@@ -108,6 +108,8 @@ Note that only the eventName field is guaranteed to be non-null.
 */
 app.get('/scrapeCalendars', function(req, res) {
 
+    console.log("----- Got request for scraping calendars ------");
+
     // Scrape both the upper school and athletics calendars, and send back the parsed data
     var upperSchoolCalendarPromise = scrapeMaretCalendar(UPPER_SCHOOL_CALENDAR_URL, scrapeUpperSchoolCalendarDay);
     var athleticsCalendarPromise = scrapeMaretCalendar(ATHLETICS_CALENDAR_URL, scrapeAthleticsCalendarDay);
@@ -115,6 +117,8 @@ app.get('/scrapeCalendars', function(req, res) {
     Promise.all([upperSchoolCalendarPromise, athleticsCalendarPromise]).then(function(response) {
         var upperSchoolCalendarData = response[0];
         var athleticsCalendarData = response[1];
+
+        console.log("----- Finished scraping calendars -----");
 
         res.json({
             "Upper School": upperSchoolCalendarData,
@@ -167,7 +171,10 @@ scrapeCalendarDay function.
 ----------------------------------------
 */
 function scrapeMaretCalendar(calendarURL, scrapeCalendarDay) {
+
     return getHTMLForURL(calendarURL).then(function(html) {
+        console.log("Scraping calendar at URL: " + calendarURL);
+
         var $ = cheerio.load(html);
 
         var promise = Promise.resolve();
@@ -177,6 +184,7 @@ function scrapeMaretCalendar(calendarURL, scrapeCalendarDay) {
         $('.calendar-day').each(function(index, elem) {
             var savedThis = this;
             promise = promise.then(function() {
+                console.log("Scraping day " + index);
                 return scrapeCalendarDay($(savedThis), $);
             }).then(function(calendarDayInfo) {
                 dayList.push(calendarDayInfo);
@@ -282,6 +290,8 @@ function scrapeUpperSchoolCalendarEvent(calendarEvent, $) {
         eventEndTime: null,
         eventLocation: null
     }
+
+    console.log("Scraping Upper School event: " + eventInfo.eventName);
 
     // If there's an h6 header, that contains the start, end,
     // and location of the event.  Eg. "3:30pm - 4:30pm - Old Gym"
@@ -457,7 +467,7 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
 
         // e.g. "Varsity Golf vs. Potomac School"
         var gameTitleString = $(".calendar-detail h1").text().trim();
-        console.log(gameTitleString);
+        console.log("Scraping athletics event: " + gameTitleString);
 
         // Check if there's a game location attached (e.g. "team at team at Jelleff" or
         // "team vs. team at Jelleff")
