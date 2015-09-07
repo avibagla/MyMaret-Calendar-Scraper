@@ -76,23 +76,23 @@ Each day dictionary has an array of event dictionaries, where the event dictiona
 depends on the calendar the event is from.  Athletic events have the format:
 
 {
-    "gameID": 12543,
-    "gameName": null,
+    "eventID": 12543,
+    "eventName": null,
     "maretTeam": "Girls' Varsity Soccer",
     "opponent": "Froggie School",
-    "gameTime": "3:00 PM",
+    "eventTime": "3:00 PM",
     "dismissalTime": "2:00 PM",
     "returnTime": "5:00 PM",
     "isHome": false,
-    "gameAddress": "1254 Lakeside Dr. Potomac, MD 20156"
-    "gameLocation": null
+    "eventAddress": "1254 Lakeside Dr. Potomac, MD 20156"
+    "eventLocation": null
 }
 
-gameID, maretTeam and isHome are guaranteed to be non-null.  gameID is a unique ID.
-gameAddress is a mappable address.  gameLocation is only the name of a place.  
-Note that isHome can be true and there can be a non-null gameLocation and gameAddress 
+eventID, maretTeam and isHome are guaranteed to be non-null.  eventID is a unique ID.
+eventAddress is a mappable address.  eventLocation is only the name of a place.  
+Note that isHome can be true and there can be a non-null eventLocation and eventAddress 
 if the game is played at a home facility besides the main school campus.  
-gameName is the special name for this event (if any - most games will not have one, 
+eventName is the special name for this event (if any - most games will not have one, 
 but some, such as cross country meets, have names like "Cross Country Invitational".)
 
 Upper School calendar events have the format:
@@ -403,16 +403,16 @@ Returns: a JSON representation of the information about this event.
 
 {
     "eventInfo": {
-        "gameID": 12546,
-        "gameName": null,
+        "eventID": 12546,
+        "eventName": null,
         "maretTeam": "Girls' Varsity Soccer",
         "opponent": "Froggie School",
-        "gameTime": "3:00 PM",
+        "eventTime": "3:00 PM",
         "dismissalTime": "2:00 PM",
         "returnTime": "5:00 PM",
         "isHome": false,
-        "gameAddress": "1254 Lakeside Dr. Potomac, MD 20152"
-        "gameLocation": null
+        "eventAddress": "1254 Lakeside Dr. Potomac, MD 20152"
+        "eventLocation": null
     },
     "dateInfo": {
         "month": "September",
@@ -425,11 +425,11 @@ Returns: a JSON representation of the information about this event.
 We return two objects - one containing information about the game itself, and 
 the other about the date on which it occurs (because the full date information is 
 only available on the event detail page).  For the dateInfo, all fields are 
-guaranteed non-null.  For the eventInfo, gameID, maretTeam, and isHome are guaranteed 
-to be non-null.  gameID is a unique ID.  gameAddress is a mappable address.  
-gameLocation is only the name of a place (e.g. Jelleff).  Note that isHome can be 
-true with a non-null gameLocation and gameAddress if the game is played at a home 
-facility besides the main school campus.  gameName is the special name for this 
+guaranteed non-null.  For the eventInfo, eventID, maretTeam, and isHome are guaranteed 
+to be non-null.  eventID is a unique ID.  eventAddress is a mappable address.  
+eventLocation is only the name of a place (e.g. Jelleff).  Note that isHome can be 
+true with a non-null eventLocation and eventAddress if the game is played at a home 
+facility besides the main school campus.  eventName is the special name for this 
 event (if any - most games will not have one, but some, such as cross country meets, 
 have names like "Landon Invitational".)
 -----------------------------------------
@@ -438,16 +438,16 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
 
     var info = {
         eventInfo: {
-            gameID: null,
-            gameName: null,
+            eventID: null,
+            eventName: null,
             maretTeam: null,
             opponent: null,
-            gameTime: null,
+            eventTime: null,
             dismissalTime: null,
             returnTime:null,
             isHome: calendarEvent.hasClass("home"),
-            gameLocation: null,
-            gameAddress: null
+            eventLocation: null,
+            eventAddress: null
         },
         dateInfo: {
             month: null,
@@ -465,8 +465,8 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
     if (TEAM_NAMES[teamID]) info.eventInfo.maretTeam = TEAM_NAMES[teamID];
     else return Promise.resolve();
 
-    // Get the gameID
-    info.eventInfo.gameID = parseInt(getParameterByName(detailPageURL, "LinkID"));
+    // Get the eventID
+    info.eventInfo.eventID = parseInt(getParameterByName(detailPageURL, "LinkID"));
 
     // Get the rest of the info from the detail page
     return getHTMLForURL(MARET_URL_BASE + detailPageURL).then(function(html) {
@@ -487,19 +487,19 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
 
         // Check if there's a game location attached (e.g. "team at team at Wilson" or
         // "team vs. team at Wilson")
-        var hasGameLocation = (gameTitleString.match(/ at /g) || []).length > 1;
-        hasGameLocation = hasGameLocation || (gameTitleString.indexOf(" at ") != -1 && 
+        var hasEventLocation = (gameTitleString.match(/ at /g) || []).length > 1;
+        hasEventLocation = hasEventLocation || (gameTitleString.indexOf(" at ") != -1 && 
             gameTitleString.indexOf(" vs. ") != -1);
 
         // Parse the game title down to just the team names.  Check if there's a dash
-        // (meaning there's an event name) or hasGameLocation is true
+        // (meaning there's an event name) or hasEventLocation is true
         if (gameTitleString.indexOf(" - ") != -1) {
             var dashComponents = gameTitleString.split(" - ");
             gameTitleString = dashComponents[0].trim();
-            info.eventInfo.gameName = dashComponents[1].trim();
-        } else if (hasGameLocation) {
+            info.eventInfo.eventName = dashComponents[1].trim();
+        } else if (hasEventLocation) {
             var atIndex = gameTitleString.lastIndexOf(" at ");
-            info.eventInfo.gameLocation = gameTitleString.substring(atIndex + " at ".length).trim();
+            info.eventInfo.eventLocation = gameTitleString.substring(atIndex + " at ".length).trim();
             gameTitleString = gameTitleString.substring(0, atIndex).trim();
         }
 
@@ -518,7 +518,7 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
         var timeString = $(".calendar-detail .time").text().trim();
         if (timeString != "") {
             timeString = timeString.split("Time:")[1].trim();
-            info.eventInfo.gameTime = timeString.substring(0, timeString.length - 2) + " " +
+            info.eventInfo.eventTime = timeString.substring(0, timeString.length - 2) + " " +
                 timeString.substring(timeString.length - 2);
         }
 
@@ -541,7 +541,7 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
         // If there's an address field, scrape the address
         var addressString = $(".calendar-detail address").text().trim();
         if (addressString != "") {
-            info.eventInfo.gameAddress = addressString;
+            info.eventInfo.eventAddress = addressString;
         }
 
         return info;
