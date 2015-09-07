@@ -13,7 +13,7 @@ var ATHLETICS_CALENDAR_URL = "http://www.maret.org/athletics-center/index.aspx";
 // All the teams we care about, stored as a mapping of a TeamID (used
 // by the Maret athletics page) to team name.  If we find an athletic
 // event with another TeamID, it's ignored.  Also helps protect against
-// typos screwing up our event categorization.
+// page typos screwing up our event categorization.
 var TEAM_NAMES = [];
 TEAM_NAMES[1185] = "Cross Country";
 TEAM_NAMES[1199] = "Varsity Football";
@@ -180,11 +180,12 @@ function scrapeMaretCalendar(calendarURL, scrapeCalendarDay) {
                 return scrapeCalendarDay($(savedThis), $);
             }).then(function(calendarDayInfo) {
                 dayList.push(calendarDayInfo);
-                return dayList;
             });
         });
 
-        return promise;
+        return promise.then(function() {
+            return dayList;
+        });
     });
 }
 
@@ -208,7 +209,7 @@ Returns: a promise passing along the JS representation of this day.  The data
     ]
 }
 
-The JS dictonary format for each event is defined by the return value of
+The JS dictonary format for each event is defined by
 the scrapeUpperSchoolCalendarEvent function.
 --------------------------------------
 */
@@ -217,6 +218,10 @@ function scrapeUpperSchoolCalendarDay(calendarDay, $) {
     // Make the JSON object for this day (list of events,
     // and date information that's added later)
     var calendarDayInfo = {
+        month: null,
+        date: null,
+        day: null,
+        year: null,
         events: []
     };
 
@@ -225,6 +230,7 @@ function scrapeUpperSchoolCalendarDay(calendarDay, $) {
     calendarDay.find("li").each(function(i, elem) {
         var savedThis = this;
         var li = $(savedThis);
+
         // First elem is date header
         if (i == 0) {
             calendarDayInfo.month = li.find(".month").text().trim();
@@ -238,12 +244,13 @@ function scrapeUpperSchoolCalendarDay(calendarDay, $) {
                 return scrapeUpperSchoolCalendarEvent(li, $);
             }).then(function(eventInfo) {
                 calendarDayInfo.events.push(eventInfo);
-                return calendarDayInfo;
             });
         }
     });
 
-    return promise;
+    return promise.then(function() {
+        return calendarDayInfo;
+    });
 }
 
 
@@ -264,7 +271,7 @@ Returns: a JS representation of the information about this event.
     "eventLocation": "Theatre,Theatre Lobby"
 }
 
-The start time, end time, and event location are optional and may be null.
+Only the eventName field is guaranteed to be non-null.
 -----------------------------
 */
 function scrapeUpperSchoolCalendarEvent(calendarEvent, $) {
@@ -319,6 +326,10 @@ function scrapeAthleticsCalendarDay(calendarDay, $) {
     // Make the JSON object for this day (list of events,
     // and date information that's added later)
     var calendarDayInfo = {
+        month: null,
+        date: null,
+        day: null,
+        year: null,
         events: []
     };
 
@@ -351,15 +362,12 @@ function scrapeAthleticsCalendarDay(calendarDay, $) {
                     calendarDayInfo.year = dateInfo.year;
                 }
             }
-
-            // This is only needed for the last promise in the chain,
-            // but it's an easy way to guarantee that the promise returned
-            // at the end of this function passes back the calendarDayInfo.
-            return calendarDayInfo;
         });
     });
 
-    return promise;
+    return promise.then(function() {
+        return calendarDayInfo;
+    });
 }
 
 
@@ -398,7 +406,7 @@ the other about the date on which it occurs (because the full date information i
 only available on the event detail page).  For the dateInfo, all fields are 
 guaranteed non-null.  For the eventInfo, maretTeam and isHome are guaranteed 
 to be non-null.  gameAddress is a mappable address.  gameLocation is only the name 
-of a place (e.g. Jelleff).  Note that isHome can be true and there can be a non-null 
+of a place (e.g. Jelleff).  Note that isHome can be true with a non-null 
 gameLocation and gameAddress if the game is played at a home facility besides the 
 main school campus.  gameName is the special name for this event (if any - most games
 will not have one, but some, such as cross country meets, have names like "Landon
@@ -447,35 +455,38 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
         info.dateInfo.date = parseInt(dateComponents[2].substr(0, dateComponents[2].length - 1));
         info.dateInfo.year = parseInt(dateComponents[3]);
 
-        // "Varsity Golf vs. Potomac School"
-        var gameTitle = $(".calendar-detail h1").text().trim();
-        console.log(gameTitle);
+        // e.g. "Varsity Golf vs. Potomac School"
+        var gameTitleString = $(".calendar-detail h1").text().trim();
+        console.log(gameTitleString);
 
-        // Parse the team names
-        var teamNames;
-        if (gameTitle.indexOf(" vs. ") != -1) {
-            teamNames = gameTitle.split(" vs. ");
-        } else if (gameTitle.indexOf(" at ") != -1) {
-            teamNames = gameTitle.split(" at ");
-        } else if (gameTitle.indexOf(" - ") != -1) {
+        // Check if there's a game location attached (e.g. "team at team at Jelleff" or
+        // "team vs. team at Jelleff")
+        var hasGameLocation = (gameTitleString.match(/ at /g) || []).length > 1;
+        hasGameLocation = hasGameLocation || (gameTitleString.indexOf(" at ") != -1 && 
+            gameTitleString.indexOf(" vs. ") != -1);
 
-            // If there's a dash, the first item is the Maret team, the second is the
-            // event name
-            var dashComponents = gameTitle.split(" - ");
-            teamNames = [dashComponents[0]];
+        // Parse the game title down to just the team names.  Check if there's a dash
+        // (meaning there's an event name) or hasGameLocation is true
+        if (gameTitleString.indexOf(" - ") != -1) {
+            var dashComponents = gameTitleString.split(" - ");
+            gameTitleString = dashComponents[0].trim();
             info.eventInfo.gameName = dashComponents[1].trim();
+        } else if (hasGameLocation) {
+            var atIndex = gameTitleString.lastIndexOf(" at ");
+            info.eventInfo.gameLocation = gameTitleString.substring(atIndex + " at ".length).trim();
+            gameTitleString = gameTitleString.substring(0, atIndex).trim();
         }
 
-        // If there's an opponent listed, include it.  Watch out for the case
-        // with the "at Jelleff Field" or something similar attached to the end
-        if (teamNames.length > 1 && teamNames[1].indexOf(" at ") == -1) {
-            info.eventInfo.opponent = teamNames[1].trim();
-            if (!info.eventInfo.isHome) info.eventInfo.gameLocation = info.eventInfo.opponent;
-        } else if (teamNames.length > 1) {
-            var opponentAndLocationArray = teamNames[1].split(" at ");
-            info.eventInfo.opponent = opponentAndLocationArray[0].trim();
-            info.eventInfo.gameLocation = opponentAndLocationArray[1].trim();
-        }
+        // Parse the team names by splitting by " vs. " or " at "
+        var teamNames;
+        if (gameTitleString.indexOf(" vs. ") != -1) {
+            teamNames = gameTitleString.split(" vs. ");
+        } else if (gameTitleString.indexOf(" at ") != -1) {
+            teamNames = gameTitleString.split(" at ");
+        } else teamNames = [gameTitleString];
+
+        // We get the Maret team name from the teamID, so we just need the opponent
+        if (teamNames.length > 1) info.eventInfo.opponent = teamNames[1].trim();
 
         // Parse the game time string ("Time: 4:00PM")
         var timeString = $(".calendar-detail .time").text().trim();
