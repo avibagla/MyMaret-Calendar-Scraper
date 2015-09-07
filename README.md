@@ -8,6 +8,7 @@ npm start
 The main file, scraper.js, will run.  There's 1 endpoint, /scrapeCalendars, which sends back a JSON response
 containing information about the events that were scraped.  The format is as follows:
 
+```javascript
 {
     "Upper School": [
         ...
@@ -16,9 +17,11 @@ containing information about the events that were scraped.  The format is as fol
         ...
     ]
 }
+```
 
 Values are arrays of day dictionaries, where each day dictionary has the format:
 
+```javascript
 {
     "month": "September",
     "date": 9,
@@ -28,10 +31,12 @@ Values are arrays of day dictionaries, where each day dictionary has the format:
         ...
     ]
 }
+```
 
 Each day dictionary has an array of event dictionaries, where the event dictionary format
 depends on the calendar the event is from.  Athletic events have the format:
 
+```javascript
 {
     "gameName": null,
     "maretTeam": "Girls' Varsity Soccer",
@@ -43,6 +48,7 @@ depends on the calendar the event is from.  Athletic events have the format:
     "gameAddress": "1254 Lakeside Dr. Potomac, MD 20156"
     "gameLocation": null
 }
+```
 
 maretTeam and isHome are guaranteed to be non-null.  gameAddress is a mappable address.
 gameLocation is only the name of a place.  Note that isHome can be 
@@ -53,11 +59,13 @@ cross country meets, have names like "Cross Country Invitational".)
 
 Upper School calendar events have the format:
 
+```javascript
 {
     "eventName": "US Leadership Workshop",
     "eventStartTime": "6:00pm",
     "eventEndTime": "7:30pm",
     "eventLocation": "Theatre,Theatre Lobby"
 }
+```
 
 Note that only the eventName field is guaranteed to be non-null.
