@@ -43,9 +43,9 @@ depends on the calendar the event is from.  Athletic events have the format:
     "gameName": null,
     "maretTeam": "Girls' Varsity Soccer",
     "opponent": "Froggie School",
-    "gameTime": "3:00pm",
-    "dismissalTime": "2:00pm",
-    "returnTime": "5:00pm",
+    "gameTime": "3:00 PM",
+    "dismissalTime": "2:00 PM",
+    "returnTime": "5:00 PM",
     "isHome": false,
     "gameAddress": "1254 Lakeside Dr. Potomac, MD 20156"
     "gameLocation": null
@@ -64,8 +64,8 @@ Upper School calendar events have the format:
 ```javascript
 {
     "eventName": "US Leadership Workshop",
-    "eventStartTime": "6:00pm",
-    "eventEndTime": "7:30pm",
+    "eventStartTime": "6:00 PM",
+    "eventEndTime": "7:30 PM",
     "eventLocation": "Theatre,Theatre Lobby"
 }
 ```

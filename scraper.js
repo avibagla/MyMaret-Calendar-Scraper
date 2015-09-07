@@ -79,9 +79,9 @@ depends on the calendar the event is from.  Athletic events have the format:
     "gameName": null,
     "maretTeam": "Girls' Varsity Soccer",
     "opponent": "Froggie School",
-    "gameTime": "3:00pm",
-    "dismissalTime": "2:00pm",
-    "returnTime": "5:00pm",
+    "gameTime": "3:00 PM",
+    "dismissalTime": "2:00 PM",
+    "returnTime": "5:00 PM",
     "isHome": false,
     "gameAddress": "1254 Lakeside Dr. Potomac, MD 20156"
     "gameLocation": null
@@ -98,8 +98,8 @@ Upper School calendar events have the format:
 
 {
     "eventName": "US Leadership Workshop",
-    "eventStartTime": "6:00pm",
-    "eventEndTime": "7:30pm",
+    "eventStartTime": "6:00 PM",
+    "eventEndTime": "7:30 PM",
     "eventLocation": "Theatre,Theatre Lobby"
 }
 
@@ -297,8 +297,17 @@ function scrapeUpperSchoolCalendarEvent(calendarEvent, $) {
     // and location of the event.  Eg. "3:30pm - 4:30pm - Old Gym"
     var eventInfoArray = calendarEvent.find("h6").text().split(" - ");
     if (eventInfoArray.length == 3) {
-        eventInfo.eventStartTime = eventInfoArray[0].trim();
-        eventInfo.eventEndTime = eventInfoArray[1].trim();
+
+        // Convert the start time ("3:00pm") to the format "3:00 PM"
+        var startTime = eventInfoArray[0].trim().toUpperCase();
+        eventInfo.eventStartTime = startTime.substring(0, startTime.length - 2) + " " + 
+            startTime.substring(startTime.length - 2);
+
+        // Convert the end time ("3:00pm") to the format "3:00 PM"
+        var endTime = eventInfoArray[1].trim().toUpperCase();
+        eventInfo.eventEndTime = endTime.substring(0, endTime.length - 2) + " " + 
+            endTime.substring(endTime.length - 2);
+
         eventInfo.eventLocation = eventInfoArray[2].trim(); 
     }
 
@@ -396,9 +405,9 @@ Returns: a JSON representation of the information about this event.
         "gameName": null,
         "maretTeam": "Girls' Varsity Soccer",
         "opponent": "Froggie School",
-        "gameTime": "3:00pm",
-        "dismissalTime": "2:00pm",
-        "returnTime": "5:00pm",
+        "gameTime": "3:00 PM",
+        "dismissalTime": "2:00 PM",
+        "returnTime": "5:00 PM",
         "isHome": false,
         "gameAddress": "1254 Lakeside Dr. Potomac, MD 20152"
         "gameLocation": null
@@ -498,22 +507,28 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
         // We get the Maret team name from the teamID, so we just need the opponent
         if (teamNames.length > 1) info.eventInfo.opponent = teamNames[1].trim();
 
-        // Parse the game time string ("Time: 4:00PM")
+        // Convert the game time string ("Time: 4:00PM") to "4:00 PM"
         var timeString = $(".calendar-detail .time").text().trim();
         if (timeString != "") {
-            info.eventInfo.gameTime = timeString.split("Time:")[1].trim().toLowerCase();
+            timeString = timeString.split("Time:")[1].trim();
+            info.eventInfo.gameTime = timeString.substring(0, timeString.length - 2) + " " +
+                timeString.substring(timeString.length - 2);
         }
 
-        // Parse the dismissal time string ("Dismissal: 2:40PM")
+        // Convert the dismissal time string ("Dismissal: 2:40PM") to "2:40 PM"
         var dismissalString = $(".calendar-detail .dismissal").text().trim();
         if (dismissalString != "") {
-            info.eventInfo.dismissalTime = dismissalString.split("Dismissal:")[1].trim().toLowerCase();
+            dismissalString = dismissalString.split("Dismissal:")[1].trim();
+            info.eventInfo.dismissalTime = dismissalString.substring(0, dismissalString.length - 2) + " " +
+                dismissalString.substring(dismissalString.length - 2);
         }
 
-        // Parse the return time string ("Return: 6:00PM")
+        // Convert the return time string ("Return: 6:00PM") to "6:00 PM"
         var returnString = $(".calendar-detail .return").text().trim();
         if (returnString != "") {
-            info.eventInfo.returnTime = returnString.split("Return:")[1].trim().toLowerCase();
+            returnString = returnString.split("Return:")[1].trim();
+            info.eventInfo.returnTime = returnString.substring(0, returnString.length - 2) + " " +
+                returnString.substring(returnString.length - 2);
         }
 
         // If there's an address field, scrape the address
