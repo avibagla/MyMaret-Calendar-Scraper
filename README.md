@@ -40,6 +40,7 @@ depends on the calendar the event is from.  Athletic events have the format:
 
 ```javascript
 {
+    "gameID": 12543,
     "gameName": null,
     "maretTeam": "Girls' Varsity Soccer",
     "opponent": "Froggie School",
@@ -52,12 +53,12 @@ depends on the calendar the event is from.  Athletic events have the format:
 }
 ```
 
-maretTeam and isHome are guaranteed to be non-null.  gameAddress is a mappable address.
-gameLocation is only the name of a place.  Note that isHome can be 
-true and there can be a non-null gameLocation and gameAddress if the game is 
-played at a home facility besides the main school campus.  gameName is the special 
-name for this event (if any - most games will not have one, but some, such as 
-cross country meets, have names like "Cross Country Invitational".)
+gameID, maretTeam and isHome are guaranteed to be non-null.  gameID is a unique ID.
+gameAddress is a mappable address.  gameLocation is only the name of a place.  
+Note that isHome can be true and there can be a non-null gameLocation and gameAddress 
+if the game is played at a home facility besides the main school campus.  
+gameName is the special name for this event (if any - most games will not have one, 
+but some, such as cross country meets, have names like "Cross Country Invitational".)
 
 Upper School calendar events have the format:
 
