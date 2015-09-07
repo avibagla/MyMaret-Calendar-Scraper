@@ -48,8 +48,8 @@ TEAM_NAMES[1189] = "Ultimate Frisbee";
 
 /* ENDPOINT: /scrape
 --------------------------
-Scrapes the Maret mobile site displaying the Upper School and Athletics
-calendars, and responds with the parsed calendar data as JSON.  The format is as follows:
+A scraper for the Maret Upper School and athletics calendar sites. 
+Responds with the parsed calendar data as JSON.  The format is as follows:
 
 {
     "Upper School": [

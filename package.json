@@ -1,7 +1,7 @@
 {
   "name": "maretcalendarscraper",
   "version": "1.0.0",
-  "description": "A scraper for the Maret calendar sites",
+  "description": "A scraper for the Maret Upper School and athletics calendar sites.",
   "main": "scraper.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
