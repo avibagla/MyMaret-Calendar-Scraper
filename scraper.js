@@ -76,6 +76,7 @@ Each day dictionary has an array of event dictionaries, where the event dictiona
 depends on the calendar the event is from.  Athletic events have the format:
 
 {
+    "gameID": 12543,
     "gameName": null,
     "maretTeam": "Girls' Varsity Soccer",
     "opponent": "Froggie School",
@@ -87,12 +88,12 @@ depends on the calendar the event is from.  Athletic events have the format:
     "gameLocation": null
 }
 
-maretTeam and isHome are guaranteed to be non-null.  gameAddress is a mappable address.
-gameLocation is only the name of a place.  Note that isHome can be 
-true and there can be a non-null gameLocation and gameAddress if the game is 
-played at a home facility besides the main school campus.  gameName is the special 
-name for this event (if any - most games will not have one, but some, such as 
-cross country meets, have names like "Cross Country Invitational".)
+gameID, maretTeam and isHome are guaranteed to be non-null.  gameID is a unique ID.
+gameAddress is a mappable address.  gameLocation is only the name of a place.  
+Note that isHome can be true and there can be a non-null gameLocation and gameAddress 
+if the game is played at a home facility besides the main school campus.  
+gameName is the special name for this event (if any - most games will not have one, 
+but some, such as cross country meets, have names like "Cross Country Invitational".)
 
 Upper School calendar events have the format:
 
@@ -402,6 +403,7 @@ Returns: a JSON representation of the information about this event.
 
 {
     "eventInfo": {
+        "gameID": 12546,
         "gameName": null,
         "maretTeam": "Girls' Varsity Soccer",
         "opponent": "Froggie School",
@@ -423,46 +425,51 @@ Returns: a JSON representation of the information about this event.
 We return two objects - one containing information about the game itself, and 
 the other about the date on which it occurs (because the full date information is 
 only available on the event detail page).  For the dateInfo, all fields are 
-guaranteed non-null.  For the eventInfo, maretTeam and isHome are guaranteed 
-to be non-null.  gameAddress is a mappable address.  gameLocation is only the name 
-of a place (e.g. Jelleff).  Note that isHome can be true with a non-null 
-gameLocation and gameAddress if the game is played at a home facility besides the 
-main school campus.  gameName is the special name for this event (if any - most games
-will not have one, but some, such as cross country meets, have names like "Landon
-Invitational".)
+guaranteed non-null.  For the eventInfo, gameID, maretTeam, and isHome are guaranteed 
+to be non-null.  gameID is a unique ID.  gameAddress is a mappable address.  
+gameLocation is only the name of a place (e.g. Jelleff).  Note that isHome can be 
+true with a non-null gameLocation and gameAddress if the game is played at a home 
+facility besides the main school campus.  gameName is the special name for this 
+event (if any - most games will not have one, but some, such as cross country meets, 
+have names like "Landon Invitational".)
 -----------------------------------------
 */
 function scrapeAthleticsCalendarEvent(calendarEvent, $) {
 
+    var info = {
+        eventInfo: {
+            gameID: null,
+            gameName: null,
+            maretTeam: null,
+            opponent: null,
+            gameTime: null,
+            dismissalTime: null,
+            returnTime:null,
+            isHome: calendarEvent.hasClass("home"),
+            gameLocation: null,
+            gameAddress: null
+        },
+        dateInfo: {
+            month: null,
+            date: null,
+            day: null,
+            year: null
+        }
+    }
+
     var detailPageURL = calendarEvent.find("a").attr("href");
+
+    // Use the teamID in the URL to get the team name - 
+    // and return if we don't know the team
+    var teamID = parseInt(getParameterByName(detailPageURL, "TeamID"));
+    if (TEAM_NAMES[teamID]) info.eventInfo.maretTeam = TEAM_NAMES[teamID];
+    else return Promise.resolve();
+
+    // Get the gameID
+    info.eventInfo.gameID = parseInt(getParameterByName(detailPageURL, "LinkID"));
 
     // Get the rest of the info from the detail page
     return getHTMLForURL(MARET_URL_BASE + detailPageURL).then(function(html) {
-
-        var info = {
-            eventInfo: {
-                gameName: null,
-                maretTeam: null,
-                opponent: null,
-                gameTime: null,
-                dismissalTime: null,
-                returnTime:null,
-                isHome: calendarEvent.hasClass("home"),
-                gameLocation: null,
-                gameAddress: null
-            },
-            dateInfo: {
-                month: null,
-                date: null,
-                day: null,
-                year: null
-            }
-        }
-
-        // Use the teamID in the URL to get the team name
-        var teamID = parseInt(detailPageURL.split("TeamID=")[1]);
-        if (TEAM_NAMES[teamID]) info.eventInfo.maretTeam = TEAM_NAMES[teamID];
-        else return null;
 
         $ = cheerio.load(html);
 
@@ -478,8 +485,8 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
         var gameTitleString = $(".calendar-detail h1").text().trim();
         console.log("Scraping athletics event: " + gameTitleString);
 
-        // Check if there's a game location attached (e.g. "team at team at Jelleff" or
-        // "team vs. team at Jelleff")
+        // Check if there's a game location attached (e.g. "team at team at Wilson" or
+        // "team vs. team at Wilson")
         var hasGameLocation = (gameTitleString.match(/ at /g) || []).length > 1;
         hasGameLocation = hasGameLocation || (gameTitleString.indexOf(" at ") != -1 && 
             gameTitleString.indexOf(" vs. ") != -1);
@@ -539,6 +546,26 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
 
         return info;
     });
+}
+
+
+/* FUNCTION: getParameterByName
+--------------------------------
+Parameters:
+    url - the url to search in
+    name - the name of the URL parameter to get the value for
+
+Returns: the value of the given parameter in the given url (returns null
+        if the parameter wasn't found)
+
+Thanks to http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
+--------------------------------
+*/
+function getParameterByName(url, name) {
+    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(url);
+    return results === null ? null : decodeURIComponent(results[1].replace(/\+/g, " "));
 }
 
 
