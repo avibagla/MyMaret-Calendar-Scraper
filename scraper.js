@@ -80,7 +80,7 @@ depends on the calendar the event is from.  Athletic events have the format:
     "eventName": null,
     "maretTeam": "Girls' Varsity Soccer",
     "opponent": "Froggie School",
-    "eventTime": "3:00 PM",
+    "startTime": "3:00 PM",
     "dismissalTime": "2:00 PM",
     "returnTime": "5:00 PM",
     "isHome": false,
@@ -99,8 +99,8 @@ Upper School calendar events have the format:
 
 {
     "eventName": "US Leadership Workshop",
-    "eventStartTime": "6:00 PM",
-    "eventEndTime": "7:30 PM",
+    "startTime": "6:00 PM",
+    "endTime": "7:30 PM",
     "eventLocation": "Theatre,Theatre Lobby"
 }
 
@@ -275,8 +275,8 @@ Returns: a JS representation of the information about this event.
 
 {
     "eventName": "US Leadership Workshop",
-    "eventStartTime": "6:00pm",
-    "eventEndTime": "7:30pm",
+    "startTime": "6:00pm",
+    "endTime": "7:30pm",
     "eventLocation": "Theatre,Theatre Lobby"
 }
 
@@ -287,8 +287,8 @@ function scrapeUpperSchoolCalendarEvent(calendarEvent, $) {
 
     var eventInfo = {
         eventName: calendarEvent.find("h3").text().trim(),
-        eventStartTime: null,
-        eventEndTime: null,
+        startTime: null,
+        endTime: null,
         eventLocation: null
     }
 
@@ -301,12 +301,12 @@ function scrapeUpperSchoolCalendarEvent(calendarEvent, $) {
 
         // Convert the start time ("3:00pm") to the format "3:00 PM"
         var startTime = eventInfoArray[0].trim().toUpperCase();
-        eventInfo.eventStartTime = startTime.substring(0, startTime.length - 2) + " " + 
+        eventInfo.startTime = startTime.substring(0, startTime.length - 2) + " " + 
             startTime.substring(startTime.length - 2);
 
         // Convert the end time ("3:00pm") to the format "3:00 PM"
         var endTime = eventInfoArray[1].trim().toUpperCase();
-        eventInfo.eventEndTime = endTime.substring(0, endTime.length - 2) + " " + 
+        eventInfo.endTime = endTime.substring(0, endTime.length - 2) + " " + 
             endTime.substring(endTime.length - 2);
 
         eventInfo.eventLocation = eventInfoArray[2].trim(); 
@@ -407,7 +407,7 @@ Returns: a JSON representation of the information about this event.
         "eventName": null,
         "maretTeam": "Girls' Varsity Soccer",
         "opponent": "Froggie School",
-        "eventTime": "3:00 PM",
+        "startTime": "3:00 PM",
         "dismissalTime": "2:00 PM",
         "returnTime": "5:00 PM",
         "isHome": false,
@@ -431,7 +431,7 @@ eventLocation is only the name of a place (e.g. Jelleff).  Note that isHome can 
 true with a non-null eventLocation and eventAddress if the game is played at a home 
 facility besides the main school campus.  eventName is the special name for this 
 event (if any - most games will not have one, but some, such as cross country meets, 
-have names like "Landon Invitational".)
+have names like "Cross Country Invitational".)
 -----------------------------------------
 */
 function scrapeAthleticsCalendarEvent(calendarEvent, $) {
@@ -442,7 +442,7 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
             eventName: null,
             maretTeam: null,
             opponent: null,
-            eventTime: null,
+            startTime: null,
             dismissalTime: null,
             returnTime:null,
             isHome: calendarEvent.hasClass("home"),
@@ -518,7 +518,7 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
         var timeString = $(".calendar-detail .time").text().trim();
         if (timeString != "") {
             timeString = timeString.split("Time:")[1].trim();
-            info.eventInfo.eventTime = timeString.substring(0, timeString.length - 2) + " " +
+            info.eventInfo.startTime = timeString.substring(0, timeString.length - 2) + " " +
                 timeString.substring(timeString.length - 2);
         }
 
