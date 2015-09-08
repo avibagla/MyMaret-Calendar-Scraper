@@ -9,7 +9,9 @@ To run the server, just run
 npm start
 ```
 
-The main file, scraper.js, will run.  There's 1 endpoint, /scrapeCalendars, which sends back a JSON response containing information about the events that were scraped.  The format is as follows:
+The main file, scraper.js, will run.  There's 1 endpoint, /scrapeCalendars, 
+which sends back a JSON response containing information about the events that were scraped.  
+The format is as follows:
 
 ```javascript
 {
