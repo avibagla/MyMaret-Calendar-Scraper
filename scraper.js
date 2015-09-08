@@ -517,7 +517,11 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
         // Convert the game time string ("Time: 4:00PM") to "4:00 PM"
         var timeString = $(".calendar-detail .time").text().trim();
         if (timeString != "") {
-            timeString = timeString.split("Time:")[1].trim();
+            timeString = timeString.split("Time:")[1];
+
+            // If it's a time range, just get the start time
+            timeString = timeString.split(" - ")[0].trim();
+            
             info.eventInfo.startTime = timeString.substring(0, timeString.length - 2) + " " +
                 timeString.substring(timeString.length - 2);
         }
