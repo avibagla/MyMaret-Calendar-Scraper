@@ -46,6 +46,7 @@ depends on the calendar the event is from.  Athletic events have the format:
     "eventID": 12543,
     "eventName": null,
     "maretTeam": "Girls' Varsity Soccer",
+    "maretTeamID": 12446,
     "opponent": "Froggie School",
     "startTime": "3:00 PM",
     "dismissalTime": "2:00 PM",
@@ -56,7 +57,7 @@ depends on the calendar the event is from.  Athletic events have the format:
 }
 ```
 
-eventID, maretTeam and isHome are guaranteed to be non-null.  eventID is a unique ID.
+eventID, maretTeam, maretTeamID and isHome are guaranteed to be non-null.  eventID is a unique ID.
 eventAddress is a mappable address.  eventLocation is only the name of a place.  
 Note that isHome can be true and there can be a non-null eventLocation and eventAddress 
 if the game is played at a home facility besides the main school campus.  

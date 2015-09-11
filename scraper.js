@@ -79,6 +79,7 @@ depends on the calendar the event is from.  Athletic events have the format:
     "eventID": 12543,
     "eventName": null,
     "maretTeam": "Girls' Varsity Soccer",
+    "maretTeamID": 12542,
     "opponent": "Froggie School",
     "startTime": "3:00 PM",
     "dismissalTime": "2:00 PM",
@@ -88,7 +89,7 @@ depends on the calendar the event is from.  Athletic events have the format:
     "eventLocation": null
 }
 
-eventID, maretTeam and isHome are guaranteed to be non-null.  eventID is a unique ID.
+eventID, maretTeam, maretTeamID and isHome are guaranteed to be non-null.  eventID is a unique ID.
 eventAddress is a mappable address.  eventLocation is only the name of a place.  
 Note that isHome can be true and there can be a non-null eventLocation and eventAddress 
 if the game is played at a home facility besides the main school campus.  
@@ -421,6 +422,7 @@ Returns: a JSON representation of the information about this event.
         "eventID": 12546,
         "eventName": null,
         "maretTeam": "Girls' Varsity Soccer",
+        "maretTeamID": 52235,
         "opponent": "Froggie School",
         "startTime": "3:00 PM",
         "dismissalTime": "2:00 PM",
@@ -440,7 +442,7 @@ Returns: a JSON representation of the information about this event.
 We return two objects - one containing information about the game itself, and 
 the other about the date on which it occurs (because the full date information is 
 only available on the event detail page).  For the dateInfo, all fields are 
-guaranteed non-null.  For the eventInfo, eventID, maretTeam, and isHome are guaranteed 
+guaranteed non-null.  For the eventInfo, eventID, maretTeam, maretTeamID and isHome are guaranteed 
 to be non-null.  eventID is a unique ID.  eventAddress is a mappable address.  
 eventLocation is only the name of a place (e.g. Jelleff).  Note that isHome can be 
 true with a non-null eventLocation and eventAddress if the game is played at a home 
@@ -456,6 +458,7 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
             eventID: null,
             eventName: null,
             maretTeam: null,
+            maretTeamID: null,
             opponent: null,
             startTime: null,
             dismissalTime: null,
@@ -477,8 +480,12 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
     // Use the teamID in the URL to get the team name - 
     // and return if we don't know the team
     var teamID = parseInt(getParameterByName(detailPageURL, "TeamID"));
-    if(TEAM_NAMES[teamID]) info.eventInfo.maretTeam = TEAM_NAMES[teamID];
-    else return Promise.resolve();
+    if(TEAM_NAMES[teamID]) {
+        info.eventInfo.maretTeam = TEAM_NAMES[teamID];
+        info.eventInfo.maretTeamID = teamID;
+    } else {
+        return Promise.resolve();
+    }
 
     // Get the eventID
     info.eventInfo.eventID = parseInt(getParameterByName(detailPageURL, "LinkID"));
