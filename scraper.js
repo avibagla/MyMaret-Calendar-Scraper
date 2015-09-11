@@ -121,10 +121,13 @@ app.get('/scrapeCalendars', function(req, res) {
 
         console.log("----- Finished scraping calendars -----");
 
-        res.json({
+        var responseData = {
             "Upper School": upperSchoolCalendarData,
             "Athletics": athleticsCalendarData
-        });
+        };
+
+        console.log("Response: " + JSON.stringify(responseData, null, 4))
+        res.json(responseData);
     }, function(error) {
         console.log("Error: " + JSON.stringify(error));
         res.sendStatus(500);
