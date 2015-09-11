@@ -285,18 +285,20 @@ Only the eventName field is guaranteed to be non-null.
 */
 function scrapeUpperSchoolCalendarEvent(calendarEvent, $) {
 
+    console.log("Scraping Upper School event: " + eventInfo.eventName);
+
     var eventInfo = {
-        eventName: calendarEvent.find("h3").text().trim(),
+        eventName: null,
         startTime: null,
         endTime: null,
         eventLocation: null
     }
 
-    console.log("Scraping Upper School event: " + eventInfo.eventName);
+    eventInfo.eventName = calendarEvent.find("h3")[0].text().trim();
 
     // If there's an h6 header, that contains the start, end,
     // and location of the event.  Eg. "3:30pm - 4:30pm - Old Gym"
-    var eventInfoArray = calendarEvent.find("h6").text().split(" - ");
+    var eventInfoArray = calendarEvent.find("h6")[0].text().split(" - ");
     if (eventInfoArray.length == 3) {
 
         // Convert the start time ("3:00pm") to the format "3:00 PM"
