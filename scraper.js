@@ -147,7 +147,7 @@ is passed back.
 function getHTMLForURL(url) {
     return new Promise(function(resolve, reject) {
         request(url, function(error, response, html) {
-            if (error) reject(error);
+            if(error) reject(error);
             else resolve(html);
         });
     });
@@ -241,7 +241,7 @@ function scrapeUpperSchoolCalendarDay(calendarDay, $) {
         var li = $(savedThis);
 
         // First elem is date header
-        if (i == 0) {
+        if(i == 0) {
             calendarDayInfo.month = li.find(".month").text().trim();
             calendarDayInfo.date = parseInt(li.find(".date").text());
             calendarDayInfo.day = li.text().split(" - ")[1];
@@ -286,18 +286,19 @@ Only the eventName field is guaranteed to be non-null.
 function scrapeUpperSchoolCalendarEvent(calendarEvent, $) {
 
     var eventInfo = {
-        eventName: calendarEvent.find("h3").text().trim(),
+        eventName: null,
         startTime: null,
         endTime: null,
         eventLocation: null
     }
 
-    console.log("Scraping Upper School event: " + eventInfo.eventName);
+    // h6 header containing event time and location Eg. "3:30pm - 4:30pm - Old Gym"
+    var h6SearchResults = calendarEvent.find("h6");
+    var h6EventInfo = h6SearchResults.length > 0 ? $(h6SearchResults[0]) : undefined;
 
-    // If there's an h6 header, that contains the start, end,
-    // and location of the event.  Eg. "3:30pm - 4:30pm - Old Gym"
-    var eventInfoArray = calendarEvent.find("h6").text().split(" - ");
-    if (eventInfoArray.length == 3) {
+    // If there's an h6 header, parse the event info
+    var eventInfoArray = h6EventInfo ? h6EventInfo.text().split(" - ") : [];
+    if(eventInfoArray.length == 3) {
 
         // Convert the start time ("3:00pm") to the format "3:00 PM"
         var startTime = eventInfoArray[0].trim().toUpperCase();
@@ -311,6 +312,20 @@ function scrapeUpperSchoolCalendarEvent(calendarEvent, $) {
 
         eventInfo.eventLocation = eventInfoArray[2].trim(); 
     }
+
+    // See if this is a linked event (with an <a> tag) or not (just <h3> and <h6> tags)
+    var linkSearchResults = calendarEvent.find("a");
+    var link = linkSearchResults.length > 0 ? $(linkSearchResults[0]) : undefined;
+    if(link && h6EventInfo) {
+        // Event name is the full link text minus the event time/location
+        eventInfo.eventName = link.text().split(h6EventInfo.text())[0].trim();
+    } else if(link) {
+        eventInfo.eventName = link.text().trim();
+    } else {
+        eventInfo.eventName = $(calendarEvent.find("h3")[0]).text().trim();
+    }
+
+    console.log("Scraping Upper School event: " + eventInfo.eventName);
 
     return eventInfo;
 }
@@ -361,20 +376,20 @@ function scrapeAthleticsCalendarDay(calendarDay, $) {
 
         // If this event's been cancelled, ignore it
         var cancelledString = $(dd.find("h4 .cancelled")[0]).text().trim();
-        if (cancelledString !== "") return;
+        if(cancelledString !== "") return;
         
         promise = promise.then(function() {
             return scrapeAthleticsCalendarEvent(dd, $);
         }).then(function(info) {
             // If it's non-null, then we should add it to our list
-            if (info) {
+            if(info) {
 
                 // Unpack the JS objects containing info
                 var eventInfo = info.eventInfo;
                 calendarDayInfo.events.push(eventInfo);
 
                 // If we haven't added the date yet, add it
-                if (!calendarDayInfo.month) {
+                if(!calendarDayInfo.month) {
                     var dateInfo = info.dateInfo;
                     calendarDayInfo.month = dateInfo.month;
                     calendarDayInfo.date = dateInfo.date;
@@ -462,7 +477,7 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
     // Use the teamID in the URL to get the team name - 
     // and return if we don't know the team
     var teamID = parseInt(getParameterByName(detailPageURL, "TeamID"));
-    if (TEAM_NAMES[teamID]) info.eventInfo.maretTeam = TEAM_NAMES[teamID];
+    if(TEAM_NAMES[teamID]) info.eventInfo.maretTeam = TEAM_NAMES[teamID];
     else return Promise.resolve();
 
     // Get the eventID
@@ -493,11 +508,11 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
 
         // Parse the game title down to just the team names.  Check if there's a dash
         // (meaning there's an event name) or hasEventLocation is true
-        if (gameTitleString.indexOf(" - ") != -1) {
+        if(gameTitleString.indexOf(" - ") != -1) {
             var dashComponents = gameTitleString.split(" - ");
             gameTitleString = dashComponents[0].trim();
             info.eventInfo.eventName = dashComponents[1].trim();
-        } else if (hasEventLocation) {
+        } else if(hasEventLocation) {
             var atIndex = gameTitleString.lastIndexOf(" at ");
             info.eventInfo.eventLocation = gameTitleString.substring(atIndex + " at ".length).trim();
             gameTitleString = gameTitleString.substring(0, atIndex).trim();
@@ -505,18 +520,18 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
 
         // Parse the team names by splitting by " vs. " or " at "
         var teamNames;
-        if (gameTitleString.indexOf(" vs. ") != -1) {
+        if(gameTitleString.indexOf(" vs. ") != -1) {
             teamNames = gameTitleString.split(" vs. ");
-        } else if (gameTitleString.indexOf(" at ") != -1) {
+        } else if(gameTitleString.indexOf(" at ") != -1) {
             teamNames = gameTitleString.split(" at ");
         } else teamNames = [gameTitleString];
 
         // We get the Maret team name from the teamID, so we just need the opponent
-        if (teamNames.length > 1) info.eventInfo.opponent = teamNames[1].trim();
+        if(teamNames.length > 1) info.eventInfo.opponent = teamNames[1].trim();
 
         // Convert the game time string ("Time: 4:00PM") to "4:00 PM"
         var timeString = $(".calendar-detail .time").text().trim();
-        if (timeString != "") {
+        if(timeString != "") {
             timeString = timeString.split("Time:")[1];
 
             // If it's a time range, just get the start time
@@ -528,7 +543,7 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
 
         // Convert the dismissal time string ("Dismissal: 2:40PM") to "2:40 PM"
         var dismissalString = $(".calendar-detail .dismissal").text().trim();
-        if (dismissalString != "") {
+        if(dismissalString != "") {
             dismissalString = dismissalString.split("Dismissal:")[1].trim();
             info.eventInfo.dismissalTime = dismissalString.substring(0, dismissalString.length - 2) + " " +
                 dismissalString.substring(dismissalString.length - 2);
@@ -536,7 +551,7 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
 
         // Convert the return time string ("Return: 6:00PM") to "6:00 PM"
         var returnString = $(".calendar-detail .return").text().trim();
-        if (returnString != "") {
+        if(returnString != "") {
             returnString = returnString.split("Return:")[1].trim();
             info.eventInfo.returnTime = returnString.substring(0, returnString.length - 2) + " " +
                 returnString.substring(returnString.length - 2);
@@ -544,7 +559,7 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
 
         // If there's an address field, scrape the address
         var addressString = $(".calendar-detail address").text().trim();
-        if (addressString != "") {
+        if(addressString != "") {
             info.eventInfo.eventAddress = addressString;
         }
 
