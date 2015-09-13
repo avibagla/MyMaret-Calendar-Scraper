@@ -230,8 +230,7 @@ function scrapeUpperSchoolCalendarDay(calendarDay, $) {
         events: []
     };
 
-    var promise = Promise.resolve();
-
+    var promises = [];
     calendarDay.find("li").each(function(i, elem) {
         var savedThis = this;
         var li = $(savedThis);
@@ -245,15 +244,12 @@ function scrapeUpperSchoolCalendarDay(calendarDay, $) {
 
         // Otherwise, call the given event parser to generate a dictionary
         } else {
-            promise = promise.then(function() {
-                return scrapeUpperSchoolCalendarEvent(li, $);
-            }).then(function(eventInfo) {
-                calendarDayInfo.events.push(eventInfo);
-            });
+            promises.push(scrapeUpperSchoolCalendarEvent(li, $));
         }
     });
 
-    return promise.then(function() {
+    return Promise.all(promises).then(function(eventsInfo) {
+        calendarDayInfo.events = eventsInfo;
         return calendarDayInfo;
     });
 }
