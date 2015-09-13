@@ -133,23 +133,23 @@ app.get('/scrapeCalendars', function(req, res) {
 });
 
 
-/* FUNCTION: getHTMLForURL
+/* FUNCTION: getURL
 --------------------------
 Parameters:
-    url - the url to GET the html for
+    url - the url to GET
 
-Returns: a promise containing the HTML of the given url
+Returns: a promise containing the GET response from the given url
 
 Uses 'request' within a promise.  If there's an error, the
-error will be passed back in a promise.  Otherwise, the html
+error will be passed back in a promise.  Otherwise, the response
 is passed back.
 --------------------------
 */
-function getHTMLForURL(url) {
+function getURL(url) {
     return new Promise(function(resolve, reject) {
-        request(url, function(error, response, html) {
+        request(url, function(error, response, body) {
             if(error) reject(error);
-            else resolve(html);
+            else resolve(body);
         });
     });
 }
@@ -174,28 +174,23 @@ scrapeCalendarDay function.
 */
 function scrapeMaretCalendar(calendarURL, scrapeCalendarDay) {
 
-    return getHTMLForURL(calendarURL).then(function(html) {
+    return getURL(calendarURL).then(function(html) {
         console.log("Scraping calendar at URL: " + calendarURL);
 
         var $ = cheerio.load(html);
 
-        var promise = Promise.resolve();
-
-        // Gather up event data for each day
-        var dayList = [];
+        // Gather up event data for each day in parallel
+        var promises = [];
         $('.calendar-day').each(function(index, elem) {
             var savedThis = this;
-            promise = promise.then(function() {
-                console.log("Scraping day " + index);
-                return scrapeCalendarDay($(savedThis), $);
-            }).then(function(calendarDayInfo) {
-                dayList.push(calendarDayInfo);
+            var newPromise = scrapeCalendarDay($(savedThis), $).then(function(calendarDayInfo) {
+                console.log("Scraped day " + index);
+                return calendarDayInfo;
             });
+            promises.push(newPromise);
         });
 
-        return promise.then(function() {
-            return dayList;
-        });
+        return Promise.all(promises);
     });
 }
 
@@ -235,8 +230,7 @@ function scrapeUpperSchoolCalendarDay(calendarDay, $) {
         events: []
     };
 
-    var promise = Promise.resolve();
-
+    var promises = [];
     calendarDay.find("li").each(function(i, elem) {
         var savedThis = this;
         var li = $(savedThis);
@@ -250,15 +244,12 @@ function scrapeUpperSchoolCalendarDay(calendarDay, $) {
 
         // Otherwise, call the given event parser to generate a dictionary
         } else {
-            promise = promise.then(function() {
-                return scrapeUpperSchoolCalendarEvent(li, $);
-            }).then(function(eventInfo) {
-                calendarDayInfo.events.push(eventInfo);
-            });
+            promises.push(scrapeUpperSchoolCalendarEvent(li, $));
         }
     });
 
-    return promise.then(function() {
+    return Promise.all(promises).then(function(eventsInfo) {
+        calendarDayInfo.events = eventsInfo;
         return calendarDayInfo;
     });
 }
@@ -369,7 +360,7 @@ function scrapeAthleticsCalendarDay(calendarDay, $) {
         events: []
     };
 
-    var promise = Promise.resolve();
+    var promises = [];
 
     calendarDay.find("dd").each(function(i, elem) {
         var savedThis = this;
@@ -378,10 +369,13 @@ function scrapeAthleticsCalendarDay(calendarDay, $) {
         // If this event's been cancelled, ignore it
         var cancelledString = $(dd.find("h4 .cancelled")[0]).text().trim();
         if(cancelledString !== "") return;
-        
-        promise = promise.then(function() {
-            return scrapeAthleticsCalendarEvent(dd, $);
-        }).then(function(info) {
+
+        promises.push(scrapeAthleticsCalendarEvent(dd, $));
+    });
+
+    return Promise.all(promises).then(function(eventsInfo) {
+        eventsInfo.forEach(function(info) {
+
             // If it's non-null, then we should add it to our list
             if(info) {
 
@@ -399,9 +393,7 @@ function scrapeAthleticsCalendarDay(calendarDay, $) {
                 }
             }
         });
-    });
 
-    return promise.then(function() {
         return calendarDayInfo;
     });
 }
@@ -491,7 +483,7 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
     info.eventInfo.eventID = parseInt(getParameterByName(detailPageURL, "LinkID"));
 
     // Get the rest of the info from the detail page
-    return getHTMLForURL(MARET_URL_BASE + detailPageURL).then(function(html) {
+    return getURL(MARET_URL_BASE + detailPageURL).then(function(html) {
 
         $ = cheerio.load(html);
 
