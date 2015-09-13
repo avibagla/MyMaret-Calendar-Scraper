@@ -360,7 +360,7 @@ function scrapeAthleticsCalendarDay(calendarDay, $) {
         events: []
     };
 
-    var promise = Promise.resolve();
+    var promises = [];
 
     calendarDay.find("dd").each(function(i, elem) {
         var savedThis = this;
@@ -369,10 +369,13 @@ function scrapeAthleticsCalendarDay(calendarDay, $) {
         // If this event's been cancelled, ignore it
         var cancelledString = $(dd.find("h4 .cancelled")[0]).text().trim();
         if(cancelledString !== "") return;
-        
-        promise = promise.then(function() {
-            return scrapeAthleticsCalendarEvent(dd, $);
-        }).then(function(info) {
+
+        promises.push(scrapeAthleticsCalendarEvent(dd, $));
+    });
+
+    return Promise.all(promises).then(function(eventsInfo) {
+        eventsInfo.forEach(function(info) {
+
             // If it's non-null, then we should add it to our list
             if(info) {
 
@@ -390,9 +393,7 @@ function scrapeAthleticsCalendarDay(calendarDay, $) {
                 }
             }
         });
-    });
 
-    return promise.then(function() {
         return calendarDayInfo;
     });
 }
