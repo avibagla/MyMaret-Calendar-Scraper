@@ -75,4 +75,7 @@ Upper School calendar events have the format:
 }
 ```
 
-Note that only the eventName field is guaranteed to be non-null.
+Note that only the eventName field is guaranteed to be non-null.  The calendars are fetched
+in parallel.  This scraper relies on Parse to provide a map of teamIDs to team names.
+The URL to fetch this map relies on PARSE_APP_ID and PARSE_JAVASCRIPT_KEY environment
+variables.
