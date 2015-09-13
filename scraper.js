@@ -179,23 +179,18 @@ function scrapeMaretCalendar(calendarURL, scrapeCalendarDay) {
 
         var $ = cheerio.load(html);
 
-        var promise = Promise.resolve();
-
-        // Gather up event data for each day
-        var dayList = [];
+        // Gather up event data for each day in parallel
+        var promises = [];
         $('.calendar-day').each(function(index, elem) {
             var savedThis = this;
-            promise = promise.then(function() {
-                console.log("Scraping day " + index);
-                return scrapeCalendarDay($(savedThis), $);
-            }).then(function(calendarDayInfo) {
-                dayList.push(calendarDayInfo);
+            var newPromise = scrapeCalendarDay($(savedThis), $).then(function(calendarDayInfo) {
+                console.log("Scraped day " + index);
+                return calendarDayInfo;
             });
+            promises.push(newPromise);
         });
 
-        return promise.then(function() {
-            return dayList;
-        });
+        return Promise.all(promises);
     });
 }
 
