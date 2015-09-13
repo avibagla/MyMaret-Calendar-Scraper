@@ -10,40 +10,9 @@ var MARET_URL_BASE = "http://www.maret.org";
 var UPPER_SCHOOL_CALENDAR_URL = "https://www.maret.org/mobile/index.aspx?v=c&mid=120&t=Upper%20School";
 var ATHLETICS_CALENDAR_URL = "http://www.maret.org/athletics-center/index.aspx";
 
-// All the teams we care about, stored as a mapping of a TeamID (used
-// by the Maret athletics page) to team name.  If we find an athletic
-// event with another TeamID, it's ignored.  Also helps protect against
-// page typos screwing up our event categorization.
-var TEAM_NAMES = [];
-TEAM_NAMES[1185] = "Cross Country";
-TEAM_NAMES[1199] = "Varsity Football";
-TEAM_NAMES[1200] = "JV Football";
-TEAM_NAMES[1186] = "Varsity Golf";
-TEAM_NAMES[1208] = "Boys' Varsity Soccer";
-TEAM_NAMES[1224] = "Girls' Varsity Soccer";
-TEAM_NAMES[1209] = "Boys' JV Soccer";
-TEAM_NAMES[1225] = "Girls' JV Soccer";
-TEAM_NAMES[1233] = "Girls' Varsity Tennis";
-TEAM_NAMES[1234] = "Varsity Volleyball";
-TEAM_NAMES[1235] = "JV Volleyball";
-TEAM_NAMES[1195] = "Basketball Boys (Varsity)";
-TEAM_NAMES[1216] = "Basketball Girls (Varsity)";
-TEAM_NAMES[1196] = "Basketball Boys (Junior Varsity)";
-TEAM_NAMES[1217] = "Basketball Girls (Junior Varsity)";
-TEAM_NAMES[1187] = "Swimming Coed (Varsity)";
-TEAM_NAMES[1232] = "Swimming Girls (Varsity)";
-TEAM_NAMES[1213] = "Wrestling Boys (Varsity)";
-TEAM_NAMES[1191] = "Baseball Boys (Varsity)";
-TEAM_NAMES[1192] = "JV Baseball";
-TEAM_NAMES[1203] = "Boys' Varsity Lacrosse";
-TEAM_NAMES[1220] = "Girls' Varsity Lacrosse";
-TEAM_NAMES[1204] = "Boys' JV Lacrosse";
-TEAM_NAMES[1221] = "Girls' JV Lacrosse";
-TEAM_NAMES[1228] = "Varsity Softball";
-TEAM_NAMES[1229] = "JV Softball";
-TEAM_NAMES[1212] = "Boys' Varsity Tennis";
-TEAM_NAMES[1188] = "Varsity Track";
-TEAM_NAMES[1189] = "Ultimate Frisbee";
+var PARSE_CONFIG_URL = "https://" + process.env.PARSE_APP_ID + ":javascript-key=" + 
+                        process.env.PARSE_JAVASCRIPT_KEY + "@api.parse.com/1/config";
+
 
 
 /* ENDPOINT: /scrape
@@ -113,20 +82,27 @@ app.get('/scrapeCalendars', function(req, res) {
 
     console.log("----- Got request for scraping calendars ------");
 
-    // Scrape both the upper school and athletics calendars, and send back the parsed data
-    var upperSchoolCalendarPromise = scrapeMaretCalendar(UPPER_SCHOOL_CALENDAR_URL, scrapeUpperSchoolCalendarDay);
-    var athleticsCalendarPromise = scrapeMaretCalendar(ATHLETICS_CALENDAR_URL, scrapeAthleticsCalendarDay);
+    getURL(PARSE_CONFIG_URL).then(function(responseText) {
+        var config = JSON.parse(responseText);
+        return config.params.ATHLETICS_TEAMS;
+    }).then(function(ATHLETICS_TEAMS) {
 
-    Promise.all([upperSchoolCalendarPromise, athleticsCalendarPromise]).then(function(response) {
-        var upperSchoolCalendarData = response[0];
-        var athleticsCalendarData = response[1];
+        // Scrape both the upper school and athletics calendars, and send back the parsed data
+        var upperSchoolCalendarPromise = scrapeMaretCalendar(UPPER_SCHOOL_CALENDAR_URL, scrapeUpperSchoolCalendarDay);
+        var athleticsCalendarPromise = scrapeMaretCalendar(ATHLETICS_CALENDAR_URL, scrapeAthleticsCalendarDay, ATHLETICS_TEAMS);
 
-        console.log("----- Finished scraping calendars -----");
+        return Promise.all([upperSchoolCalendarPromise, athleticsCalendarPromise]).then(function(response) {
+            var upperSchoolCalendarData = response[0];
+            var athleticsCalendarData = response[1];
 
-        res.json({
-            "Upper School": upperSchoolCalendarData,
-            "Athletics": athleticsCalendarData
+            console.log("----- Finished scraping calendars -----");
+
+            res.json({
+                "Upper School": upperSchoolCalendarData,
+                "Athletics": athleticsCalendarData
+            });
         });
+
     }, function(error) {
         console.log("Error: " + JSON.stringify(error));
         res.sendStatus(500);
@@ -164,6 +140,9 @@ Parameters:
                         a single calendar day, and the Cheerio DOM parser for
                         the page, and returns a JS object containing all the
                         day information.
+    ATHLETICS_TEAMS - optional - if non-null, passed as the 3rd param to the
+                scrapeCalendarDay function.  A map from teamID to team name 
+                used for parsing athletics events.
 
 Returns: a promise passing back the JS representation of the given calendar.
 
@@ -173,7 +152,7 @@ for each day's events.  The JS dictonary format for each day is defined by the
 scrapeCalendarDay function.  All days are fetched in parallel.
 ----------------------------------------
 */
-function scrapeMaretCalendar(calendarURL, scrapeCalendarDay) {
+function scrapeMaretCalendar(calendarURL, scrapeCalendarDay, ATHLETICS_TEAMS) {
 
     return getURL(calendarURL).then(function(html) {
         console.log("Scraping calendar at URL: " + calendarURL);
@@ -184,7 +163,11 @@ function scrapeMaretCalendar(calendarURL, scrapeCalendarDay) {
         var promises = [];
         $('.calendar-day').each(function(index, elem) {
             var savedThis = this;
-            var newPromise = scrapeCalendarDay($(savedThis), $).then(function(calendarDayInfo) {
+
+            // Pass along the team names dictionary if there is one
+            var newPromise = ATHLETICS_TEAMS ? scrapeCalendarDay($(savedThis), $, ATHLETICS_TEAMS) : 
+                            scrapeCalendarDay($(savedThis), $);
+            newPromise = newPromise.then(function(calendarDayInfo) {
                 console.log("Scraped day " + index);
                 return calendarDayInfo;
             });
@@ -329,6 +312,7 @@ function scrapeUpperSchoolCalendarEvent(calendarEvent, $) {
 Parameters:
     calendarDay - the DOM element for a single day in the Athletics calendar.
     $ - the Cheerio object to use to traverse this DOM
+    ATHLETICS_TEAMS - the map of teamID strings to team names.
 
 Returns: a promise passing along the JS representation of this day.  The data
         format is as follows:
@@ -350,7 +334,7 @@ Instead, we have to get the date out of scraping a calendar event.  All events
 within a given day are scraped in parallel.
 --------------------------------------
 */
-function scrapeAthleticsCalendarDay(calendarDay, $) {
+function scrapeAthleticsCalendarDay(calendarDay, $, ATHLETICS_TEAMS) {
 
     // Make the JSON object for this day (list of events,
     // and date information that's added later)
@@ -372,7 +356,7 @@ function scrapeAthleticsCalendarDay(calendarDay, $) {
         var cancelledString = $(dd.find("h4 .cancelled")[0]).text().trim();
         if(cancelledString !== "") return;
 
-        promises.push(scrapeAthleticsCalendarEvent(dd, $));
+        promises.push(scrapeAthleticsCalendarEvent(dd, $, ATHLETICS_TEAMS));
     });
 
     return Promise.all(promises).then(function(eventsInfo) {
@@ -407,6 +391,8 @@ Parameters:
     calendarEvent - the DOM element representing a single calendar event from
                 the Athletics calendar.
     $ - the Cheerio object to use to traverse this DOM
+    ATHLETICS_TEAMS - a dictionary of teamID (string) to team name (string).  Used to
+                look up team names and make sure we scrape only the right events.
 
 Returns: a JSON representation of the information about this event.
         The JSON returned has the format:
@@ -445,7 +431,7 @@ event (if any - most games will not have one, but some, such as cross country me
 have names like "Cross Country Invitational".)
 -----------------------------------------
 */
-function scrapeAthleticsCalendarEvent(calendarEvent, $) {
+function scrapeAthleticsCalendarEvent(calendarEvent, $, ATHLETICS_TEAMS) {
 
     var info = {
         eventInfo: {
@@ -474,8 +460,8 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
     // Use the teamID in the URL to get the team name - 
     // and return if we don't know the team
     var teamID = parseInt(getParameterByName(detailPageURL, "TeamID"));
-    if(TEAM_NAMES[teamID]) {
-        info.eventInfo.maretTeam = TEAM_NAMES[teamID];
+    if(ATHLETICS_TEAMS[teamID]) {
+        info.eventInfo.maretTeam = ATHLETICS_TEAMS[teamID];
         info.eventInfo.maretTeamID = teamID;
     } else {
         return Promise.resolve();
