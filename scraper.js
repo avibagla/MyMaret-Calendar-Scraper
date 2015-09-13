@@ -133,23 +133,23 @@ app.get('/scrapeCalendars', function(req, res) {
 });
 
 
-/* FUNCTION: getHTMLForURL
+/* FUNCTION: getURL
 --------------------------
 Parameters:
-    url - the url to GET the html for
+    url - the url to GET
 
-Returns: a promise containing the HTML of the given url
+Returns: a promise containing the GET response from the given url
 
 Uses 'request' within a promise.  If there's an error, the
-error will be passed back in a promise.  Otherwise, the html
+error will be passed back in a promise.  Otherwise, the response
 is passed back.
 --------------------------
 */
-function getHTMLForURL(url) {
+function getURL(url) {
     return new Promise(function(resolve, reject) {
-        request(url, function(error, response, html) {
+        request(url, function(error, response, body) {
             if(error) reject(error);
-            else resolve(html);
+            else resolve(body);
         });
     });
 }
@@ -174,7 +174,7 @@ scrapeCalendarDay function.
 */
 function scrapeMaretCalendar(calendarURL, scrapeCalendarDay) {
 
-    return getHTMLForURL(calendarURL).then(function(html) {
+    return getURL(calendarURL).then(function(html) {
         console.log("Scraping calendar at URL: " + calendarURL);
 
         var $ = cheerio.load(html);
@@ -491,7 +491,7 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $) {
     info.eventInfo.eventID = parseInt(getParameterByName(detailPageURL, "LinkID"));
 
     // Get the rest of the info from the detail page
-    return getHTMLForURL(MARET_URL_BASE + detailPageURL).then(function(html) {
+    return getURL(MARET_URL_BASE + detailPageURL).then(function(html) {
 
         $ = cheerio.load(html);
 
