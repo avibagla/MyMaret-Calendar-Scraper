@@ -105,7 +105,8 @@ Upper School calendar events have the format:
     "eventLocation": "Theatre,Theatre Lobby"
 }
 
-Note that only the eventName field is guaranteed to be non-null.
+Note that only the eventName field is guaranteed to be non-null.  Both calendars are fetched
+in parallel.
 --------------------------
 */
 app.get('/scrapeCalendars', function(req, res) {
@@ -169,7 +170,7 @@ Returns: a promise passing back the JS representation of the given calendar.
 Scrapes the HTML from the given calendar page, and passes back (via promise) 
 the JS representation.  The format consists of an array containing a dictionary 
 for each day's events.  The JS dictonary format for each day is defined by the 
-scrapeCalendarDay function.
+scrapeCalendarDay function.  All days are fetched in parallel.
 ----------------------------------------
 */
 function scrapeMaretCalendar(calendarURL, scrapeCalendarDay) {
@@ -345,7 +346,8 @@ Returns: a promise passing along the JS representation of this day.  The data
 The JS dictonary format for each event is defined by the return value of
 the scrapeAthleticsCalendarEvent function.  Because of the way dates are
 displayed, we're not able to get the full date from the calendar day itself.  
-Instead, we have to get the date out of scraping a calendar event.
+Instead, we have to get the date out of scraping a calendar event.  All events
+within a given day are scraped in parallel.
 --------------------------------------
 */
 function scrapeAthleticsCalendarDay(calendarDay, $) {
