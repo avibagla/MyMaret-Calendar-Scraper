@@ -6,7 +6,7 @@ var app = express();
 app.set('port', (process.env.PORT || 5000));
 
 
-/* ENDPOINT: GET /scrapeSchoolCalendar
+/* ENDPOINT: GET /schoolCalendars
 --------------------------
 A scraper for the general school calendar.
 Responds with the parsed calendar data as JSON.  The format is as follows:
@@ -52,7 +52,7 @@ Note that only the eventName field is guaranteed to be non-null.  All calendars
 are scraped in parallel.
 --------------------------
 */
-app.get('/scrapeSchoolCalendars', function(req, res) {
+app.get('/schoolCalendars', function(req, res) {
     "use strict";
     scrapeCalendars(util.constants.SCHOOL_CALENDAR_URLS,
         scraper.scrapeSchoolCalendar).then(function(calendarData) {
@@ -64,7 +64,7 @@ app.get('/scrapeSchoolCalendars', function(req, res) {
 });
 
 
-/* ENDPOINT: GET /scrapeAthleticsCalendar
+/* ENDPOINT: GET /athleticsCalendar
 --------------------------
 A scraper for the athletics calendar.
 Responds with an array of (sorted, from earliest to latest) day dictionaries,
@@ -107,7 +107,7 @@ for this event (if any - most events will not have one, but some, such as cross
 country meets, have names like "Cross Country Invitational".)
 --------------------------
 */
-app.get('/scrapeAthleticsCalendar', function(req, res) {
+app.get('/athleticsCalendar', function(req, res) {
     "use strict";
     scraper.scrapeAthleticsTeams().then(function(teams) {
 
@@ -132,7 +132,7 @@ app.get('/scrapeAthleticsCalendar', function(req, res) {
 });
 
 
-/* ENDPOINT: GET /scrapeAthleticsTeams
+/* ENDPOINT: GET /athleticsTeams
 -----------------------------------------
 A scraper for athletics teams information.  Responds with an array of athletics
 teams objects (sorted by season - Fall, then Winter, then Spring), where each
@@ -145,7 +145,7 @@ object contains the following properties (all guaranteed to be non-null):
 }
 -----------------------------------------
 */
-app.get('/scrapeAthleticsTeams', function(req, res) {
+app.get('/athleticsTeams', function(req, res) {
     "use strict";
     scraper.scrapeAthleticsTeams().then(function(teams) {
         res.json(teams);

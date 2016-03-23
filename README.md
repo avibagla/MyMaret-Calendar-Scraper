@@ -12,7 +12,7 @@ npm start
 
 The main file, server.js, will run.  There are multiple endpoints:
     
-### GET /scrapeSchoolCalendars
+### GET /schoolCalendars
 
 This sends back a JSON response containing information about the events in
 all the main school calendars.  With the given util.js settings, the format
@@ -61,7 +61,7 @@ dictionary format is the following:
 Note that only the eventName field is guaranteed to be non-null.  The calendars
 are fetched in parallel.
 
-### GET /scrapeAthleticsCalendar
+### GET /athleticsCalendar
 
 This sends back a JSON response containing information about the events in the
 athletics calendar.  The response format is an array of day dictionaries, which
@@ -93,7 +93,7 @@ a home facility besides the main school campus.  eventName is the special name
 for this event (if any - most events will not have one, but some, such as cross
 country meets, have names like "Cross Country Invitational".)
 
-### GET /scrapeAthleticsTeams
+### GET /athleticsTeams
 
 This sends back an array of athletics teams objects sorted by season - Fall,
 then Winter, then Spring.  Each object contains the following properties 
