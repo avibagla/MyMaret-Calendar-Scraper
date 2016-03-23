@@ -99,9 +99,11 @@ This sends back an array of athletics teams objects sorted by season - Fall,
 then Winter, then Spring.  Each object contains the following properties 
 (all guaranteed to be non-null):
 
+```javascript
 {
     teamName: "Cross Country",
     teamID: 1245,
     season: "Fall"
 }
+```
 
