@@ -6,7 +6,7 @@ var app = express();
 app.set('port', (process.env.PORT || 5000));
 
 
-/* ENDPOINT: /scrapeSchoolCalendar
+/* ENDPOINT: GET /scrapeSchoolCalendar
 --------------------------
 A scraper for the general school calendar.
 Responds with the parsed calendar data as JSON.  The format is as follows:
@@ -25,7 +25,8 @@ specified in the constants file.  Each of its keys becomes a key in the JSON
 returned from this endpoint, and the calendar data included with each key is
 from the value (URL) for that key in the ATHLETICS_CALENDAR_URLS dictionary.
 
-Values are arrays of day dictionaries, where each day dictionary has the format:
+Values are arrays of (sorted, from earliest to latest) day dictionaries, 
+where each day dictionary has the format:
 
 {
     "month": "September",
@@ -63,18 +64,11 @@ app.get('/scrapeSchoolCalendars', function(req, res) {
 });
 
 
-/* ENDPOINT: /scrapeAthleticsCalendar
+/* ENDPOINT: GET /scrapeAthleticsCalendar
 --------------------------
 A scraper for the athletics calendar.
-Responds with the parsed calendar data as JSON.  The format is as follows:
-
-{
-    "Athletics": [
-        ...
-    ]
-}
-
-The array contains day dictionaries, where each day dictionary has the format:
+Responds with an array of (sorted, from earliest to latest) day dictionaries,
+where each day dictionary has the format:
 
 {
     "month": "September",
@@ -113,7 +107,7 @@ for this event (if any - most events will not have one, but some, such as cross
 country meets, have names like "Cross Country Invitational".)
 --------------------------
 */
-app.get('/scrapeAthleticsCalendars', function(req, res) {
+app.get('/scrapeAthleticsCalendar', function(req, res) {
     "use strict";
     scraper.scrapeAthleticsTeams().then(function(teams) {
 
@@ -130,7 +124,31 @@ app.get('/scrapeAthleticsCalendars', function(req, res) {
         return scrapeCalendars(calendarDict, scraper.scrapeAthleticsCalendar,
             athleticsTeamsMap);
     }).then(function(calendarData) {
-        res.json(calendarData);
+        res.json(calendarData["Athletics"]);
+    }, function(error) {
+        console.log("Error: " + JSON.stringify(error));
+        res.sendStatus(500);
+    });
+});
+
+
+/* ENDPOINT: GET /scrapeAthleticsTeams
+-----------------------------------------
+A scraper for athletics teams information.  Responds with an array of athletics
+teams objects (sorted by season - Fall, then Winter, then Spring), where each
+object contains the following properties (all guaranteed to be non-null):
+
+{
+    teamName: "Cross Country",
+    teamID: 1245,
+    season: "Fall"
+}
+-----------------------------------------
+*/
+app.get('/scrapeAthleticsTeams', function(req, res) {
+    "use strict";
+    scraper.scrapeAthleticsTeams().then(function(teams) {
+        res.json(teams);
     }, function(error) {
         console.log("Error: " + JSON.stringify(error));
         res.sendStatus(500);
