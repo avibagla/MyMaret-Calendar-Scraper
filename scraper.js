@@ -1,35 +1,165 @@
-var request = require('request');
 var cheerio = require('cheerio');
-var express = require('express');
 var Promise = require('promise');
-var app = express();
-app.set('port', (process.env.PORT || 5000));
+var util = require('./util.js');
 
 
-var MARET_URL_BASE = "http://www.maret.org";
-var UPPER_SCHOOL_CALENDAR_URL = "https://www.maret.org/mobile/index.aspx?v=c&mid=120&t=Upper%20School";
-var ATHLETICS_CALENDAR_URL = "http://www.maret.org/athletics-center/index.aspx";
-
-var PARSE_CONFIG_URL = "https://" + process.env.PARSE_APP_ID + ":javascript-key=" + 
-                        process.env.PARSE_JAVASCRIPT_KEY + "@api.parse.com/1/config";
-
-
-
-/* ENDPOINT: /scrape
---------------------------
-A scraper for the Maret Upper School and athletics calendar sites. 
-Responds with the parsed calendar data as JSON.  The format is as follows:
+/* FUNCTION: scrapeAthleticsTeams
+-----------------------------------
+Parameters: NA
+Returns: a promise passing back a sorted (by season - Fall, then Winter, then
+Spring) array of objects for each of the teams included in the athletics teams
+page at ATHLETICS_TEAMS_URL (see util.js).  Each team object contains 3 fields:
 
 {
-    "Upper School": [
+    teamName: "Cross Country",
+    teamID: 4124,
+    season: "Fall"    
+}
+
+where season is either "Fall", "Winter", or "Spring".
+-----------------------------------
+*/
+function scrapeAthleticsTeams() {
+    return util.getURL(util.constants.ATHLETICS_TEAMS_URL).then(function(html) {
+        var $ = cheerio.load(html);
+        return scrapeAthleticsTeamsDOM($);
+    });
+}
+
+
+/* FUNCTION: scrapeAthleticsTeamsDOM
+-------------------------------------
+Parameters:
+    $ - the Cheerio DOM parser for the athletics teams page.
+
+Returns: a promise passing back a sorted (by season - Fall, then Winter, then
+Spring) array of objects for each of the teams included in the athletics teams
+page at ATHLETICS_TEAMS_URL (see util.js).  Each team object contains 3 fields:
+
+{
+    teamName: "Cross Country",
+    teamID: 4124,
+    season: "Fall"    
+}
+
+where season is either "Fall", "Winter", or "Spring".
+--------------------------------------
+*/
+function scrapeAthleticsTeamsDOM($) {
+    var teamsList = [];
+
+    // Each team has a link to its schedule - find each link element
+    $('.teamlist .content-group a').each(function() {
+
+        // The team ID is in the team's link URL 
+        // (.../athletics-center/list/team/schedule/index.aspx?TeamID=1228)
+        var teamIDStr = $(this).attr("href").match(/TeamID=([0-9]+)/)[1];
+        var teamID = parseInt(teamIDStr);
+
+        // The team name is the link text
+        var teamName = $(this).text();
+
+        // The season is in the containing content-group, as its last class
+        var classAttr = $(this).closest(".content-group").attr("class");
+        var season = classAttr.split(/\s+/).pop();
+        season = season.charAt(0).toUpperCase() + season.slice(1);
+
+        teamsList.push({
+            teamName: teamName,
+            teamID: teamID,
+            season: season
+        });
+    });
+
+    return teamsList;
+}
+
+
+/* FUNCTION: scrapeCalendars
+------------------------------
+Parameters:
+    calendarsDictionary - a dictionary of calendar names to calendar urls.
+                        Each entry specifies a single calendar to
+                        scrape.
+    calendarScraperFn - a function responsible for scraping a single calendar.
+                        It should take the Cheerio DOM element for a single
+                        calendar page as a parameter, along with optional
+                        auxiliary data (see auxData below) and should return a
+                        promise passing back a JS array of day objects for the
+                        given calendar.  Each object should have the following
+                        properties:
+
+                        {
+                            "month": "September",
+                            "date": 9,
+                            "day": "Wednesday",
+                            "year": 2015,
+                            "events": [
+                                ...
+                            ]
+                        }
+
+                        Where each element in the events array is an object
+                        describing a single calendar event on that day.
+    auxData - optional auxiliary data that is passed to the calendarScraperFn.
+
+Returns: a promise passing back a JS dictionary containing all of the scraped
+calendar data.  The format is as follows:
+
+{
+    "CALENDAR_NAME": [
         ...
     ],
-    "Athletics": [
+    "CALENDAR_NAME": [
         ...
     ]
 }
 
-Values are arrays of day dictionaries, where each day dictionary has the format:
+Where each CALENDAR_NAME is a key from a calendarsDictionary entry, and the
+value array is the return value from the calendarScraperFn run on the HTML at
+the url associated with that calendarsDictionary key.
+
+All calendars are scraped in parallel.
+------------------------------
+*/
+function scrapeCalendars(calendarsDictionary, calendarScraperFn, auxData) {
+
+    var calendarPromises = [];
+    var calendarNames = [];
+
+    /* Scrape each calendar */
+    for (var calendarName in calendarsDictionary) {
+      if (calendarsDictionary.hasOwnProperty(calendarName)) {
+        var calendarURL = calendarsDictionary[calendarName];
+        var promise = getURL(calendarURL).then(function(html) {
+            var $ = cheerio.load(html);
+            return calendarScraperFn($.root(), $, auxData);
+        });
+
+        calendarPromises.push(promise);
+        calendarNames.push(calendarName);
+      }
+    }
+
+    return Promise.all(calendarPromises).then(function(promiseResponses) {
+        var calendarsData = {};
+        promiseResponses.forEach(function(response, index) {
+            calendarsData[calendarNames[index]] = response;
+        });
+
+        return calendarsData;
+    });
+}
+
+
+/* FUNCTION: scrapeSchoolCalendar
+----------------------------------------
+Parameters:
+    calendar - the Cheerio DOM element for a single calendar.
+    $ - the Cheerio DOM parser for a single school calendar.
+
+Returns: a JS array of day objects for the given calendar.
+Each object has the following properties:
 
 {
     "month": "September",
@@ -41,31 +171,8 @@ Values are arrays of day dictionaries, where each day dictionary has the format:
     ]
 }
 
-Each day dictionary has an array of event dictionaries, where the event dictionary format
-depends on the calendar the event is from.  Athletic events have the format:
-
-{
-    "eventID": 12543,
-    "eventName": null,
-    "maretTeam": "Girls' Varsity Soccer",
-    "maretTeamID": 12542,
-    "opponent": "Froggie School",
-    "startTime": "3:00 PM",
-    "dismissalTime": "2:00 PM",
-    "returnTime": "5:00 PM",
-    "isHome": false,
-    "eventAddress": "1254 Lakeside Dr. Potomac, MD 20156"
-    "eventLocation": null
-}
-
-eventID, maretTeam, maretTeamID and isHome are guaranteed to be non-null.  eventID is a unique ID.
-eventAddress is a mappable address.  eventLocation is only the name of a place.  
-Note that isHome can be true and there can be a non-null eventLocation and eventAddress 
-if the game is played at a home facility besides the main school campus.  
-eventName is the special name for this event (if any - most games will not have one, 
-but some, such as cross country meets, have names like "Cross Country Invitational".)
-
-Upper School calendar events have the format:
+Where each element in the events array is an object describing a single calendar
+event on that day.  Each event object has the format:
 
 {
     "eventName": "US Leadership Workshop",
@@ -74,121 +181,29 @@ Upper School calendar events have the format:
     "eventLocation": "Theatre,Theatre Lobby"
 }
 
-Note that only the eventName field is guaranteed to be non-null.  Both calendars are fetched
-in parallel.  This scraper relies on Parse to provide a map of teamIDs to team names.
-The URL to fetch this map relies on PARSE_APP_ID and PARSE_JAVASCRIPT_KEY environment
-variables (see above).
---------------------------
+Note that only the eventName field is guaranteed to be non-null.
+----------------------------------------
 */
-app.get('/scrapeCalendars', function(req, res) {
+function scrapeSchoolCalendar(calendar, $) {
 
-    console.log("----- Got request for scraping calendars ------");
-
-    getURL(PARSE_CONFIG_URL).then(function(responseText) {
-        var config = JSON.parse(responseText);
-        return config.params.ATHLETICS_TEAMS;
-    }).then(function(ATHLETICS_TEAMS) {
-
-        // Scrape both the upper school and athletics calendars, and send back the parsed data
-        var upperSchoolCalendarPromise = scrapeMaretCalendar(UPPER_SCHOOL_CALENDAR_URL, scrapeUpperSchoolCalendarDay);
-        var athleticsCalendarPromise = scrapeMaretCalendar(ATHLETICS_CALENDAR_URL, scrapeAthleticsCalendarDay, ATHLETICS_TEAMS);
-
-        return Promise.all([upperSchoolCalendarPromise, athleticsCalendarPromise]).then(function(response) {
-            var upperSchoolCalendarData = response[0];
-            var athleticsCalendarData = response[1];
-
-            console.log("----- Finished scraping calendars -----");
-
-            res.json({
-                "Upper School": upperSchoolCalendarData,
-                "Athletics": athleticsCalendarData
-            });
-        });
-
-    }, function(error) {
-        console.log("Error: " + JSON.stringify(error));
-        res.sendStatus(500);
-    });  
-});
-
-
-/* FUNCTION: getURL
---------------------------
-Parameters:
-    url - the url to GET
-
-Returns: a promise containing the GET response from the given url
-
-Uses 'request' within a promise.  If there's an error, the
-error will be passed back in a promise.  Otherwise, the response
-is passed back.
---------------------------
-*/
-function getURL(url) {
-    return new Promise(function(resolve, reject) {
-        request(url, function(error, response, body) {
-            if(error) reject(error);
-            else resolve(body);
-        });
+    var calendarDaysData = [];
+    calendar.find('.calendar-day').each(function(index, elem) {
+        var savedThis = this;
+        calendarDaysData.push(scrapeSchoolCalendarDay($(savedThis), $));
     });
+
+    return calendarDaysData;
 }
 
 
-/* FUNCTION: scrapeMaretCalendar
-----------------------------------------
-Parameters:
-    calendarURL - URL of the Maret calendar page to scrape
-    scrapeCalendarDay - function that takes a Cheerio DOM element representing
-                        a single calendar day, and the Cheerio DOM parser for
-                        the page, and returns a JS object containing all the
-                        day information.
-    ATHLETICS_TEAMS - optional - if non-null, passed as the 3rd param to the
-                scrapeCalendarDay function.  A map from teamID to team name 
-                used for parsing athletics events.
-
-Returns: a promise passing back the JS representation of the given calendar.
-
-Scrapes the HTML from the given calendar page, and passes back (via promise) 
-the JS representation.  The format consists of an array containing a dictionary 
-for each day's events.  The JS dictonary format for each day is defined by the 
-scrapeCalendarDay function.  All days are fetched in parallel.
-----------------------------------------
-*/
-function scrapeMaretCalendar(calendarURL, scrapeCalendarDay, ATHLETICS_TEAMS) {
-
-    return getURL(calendarURL).then(function(html) {
-        console.log("Scraping calendar at URL: " + calendarURL);
-
-        var $ = cheerio.load(html);
-
-        // Gather up event data for each day in parallel
-        var promises = [];
-        $('.calendar-day').each(function(index, elem) {
-            var savedThis = this;
-
-            // Pass along the team names dictionary if there is one
-            var newPromise = ATHLETICS_TEAMS ? scrapeCalendarDay($(savedThis), $, ATHLETICS_TEAMS) : 
-                            scrapeCalendarDay($(savedThis), $);
-            newPromise = newPromise.then(function(calendarDayInfo) {
-                console.log("Scraped day " + index);
-                return calendarDayInfo;
-            });
-            promises.push(newPromise);
-        });
-
-        return Promise.all(promises);
-    });
-}
-
-
-/* FUNCTION: scrapeUpperSchoolCalendarDay
+/* FUNCTION: scrapeSchoolCalendarDay
 -------------------------------------
 Parameters:
-    calendarDay - the DOM element for a single day in the Upper School calendar.
-    $ - the Cheerio object to use to traverse this DOM
+    calendarDay - the DOM element for a single day in a school calendar.
+    $ - the Cheerio object to use to traverse this DOM.
 
-Returns: a promise passing along the JS representation of this day.  The data
-        format is as follows:
+Returns: a JS object containing information about this calendar day.  The
+object has the following properties:
 
 {
     "month": "September",
@@ -200,14 +215,23 @@ Returns: a promise passing along the JS representation of this day.  The data
     ]
 }
 
-The JS dictonary format for each event is defined by
-the scrapeUpperSchoolCalendarEvent function.
+The "events" array is an array of event dictionaries, where each event
+dictionary has the format:
+
+{
+    "eventName": "US Leadership Workshop",
+    "startTime": "6:00 PM",
+    "endTime": "7:30 PM",
+    "eventLocation": "Theatre,Theatre Lobby"
+}
+
+Note that only the eventName field is guaranteed to be non-null.
 --------------------------------------
 */
-function scrapeUpperSchoolCalendarDay(calendarDay, $) {
+function scrapeSchoolCalendarDay(calendarDay, $) {
 
-    // Make the JSON object for this day (list of events,
-    // and date information that's added later)
+    /* Make the JSON object for this day (list of events,
+     * and date information that's added later) */
     var calendarDayInfo = {
         month: null,
         date: null,
@@ -216,32 +240,28 @@ function scrapeUpperSchoolCalendarDay(calendarDay, $) {
         events: []
     };
 
-    var promises = [];
     calendarDay.find("li").each(function(i, elem) {
         var savedThis = this;
         var li = $(savedThis);
 
-        // First elem is date header
-        if(i == 0) {
+        /* First elem is date header */
+        if (i == 0) {
             calendarDayInfo.month = li.find(".month").text().trim();
             calendarDayInfo.date = parseInt(li.find(".date").text());
-            calendarDayInfo.day = li.text().split(" - ")[1];
+            calendarDayInfo.day = li.text().split("-")[1].trim();
             calendarDayInfo.year = parseInt(li.find(".year").text());
 
-        // Otherwise, call the given event parser to generate a dictionary
+        /* Otherwise, call the given event parser to generate a dictionary */
         } else {
-            promises.push(scrapeUpperSchoolCalendarEvent(li, $));
+            calendarDayInfo.events.push(scrapeSchoolCalendarEvent(li, $));
         }
     });
 
-    return Promise.all(promises).then(function(eventsInfo) {
-        calendarDayInfo.events = eventsInfo;
-        return calendarDayInfo;
-    });
+    return calendarDayInfo;
 }
 
 
-/* FUNCTION: scrapeUpperSchoolCalendarEvent
+/* FUNCTION: scrapeSchoolCalendarEvent
 ------------------------------
 Parameters:
     calendarEvent - the DOM element representing a single calendar event from
@@ -261,7 +281,7 @@ Returns: a JS representation of the information about this event.
 Only the eventName field is guaranteed to be non-null.
 -----------------------------
 */
-function scrapeUpperSchoolCalendarEvent(calendarEvent, $) {
+function scrapeSchoolCalendarEvent(calendarEvent, $) {
 
     var eventInfo = {
         eventName: null,
@@ -270,54 +290,77 @@ function scrapeUpperSchoolCalendarEvent(calendarEvent, $) {
         eventLocation: null
     }
 
-    // h6 header containing event time and location Eg. "3:30pm - 4:30pm - Old Gym"
+    /* h6 containing event time and location Eg. "3:30pm - 4:30pm - Old Gym" */
     var h6SearchResults = calendarEvent.find("h6");
-    var h6EventInfo = h6SearchResults.length > 0 ? $(h6SearchResults[0]) : undefined;
+    var h6EventInfo = h6SearchResults.length > 0 ? $(h6SearchResults[0]) :
+                        undefined;
 
-    // If there's an h6 header, parse the event info
+    /* If there's an h6 header, parse the event info */
     var eventInfoArray = h6EventInfo ? h6EventInfo.text().split(" - ") : [];
-    if(eventInfoArray.length == 3) {
 
-        // Convert the start time ("3:00pm") to the format "3:00 PM"
+    /* Convert the start time ("3:00pm") to the format "3:00 PM" */
+    if (eventInfoArray.length > 0 && eventInfoArray[0].trim() != "") {
         var startTime = eventInfoArray[0].trim().toUpperCase();
-        eventInfo.startTime = startTime.substring(0, startTime.length - 2) + " " + 
-            startTime.substring(startTime.length - 2);
-
-        // Convert the end time ("3:00pm") to the format "3:00 PM"
-        var endTime = eventInfoArray[1].trim().toUpperCase();
-        eventInfo.endTime = endTime.substring(0, endTime.length - 2) + " " + 
-            endTime.substring(endTime.length - 2);
-
-        eventInfo.eventLocation = eventInfoArray[2].trim(); 
+        eventInfo.startTime = startTime.substring(0, startTime.length - 2) +
+                            " " + startTime.substring(startTime.length - 2);
     }
 
-    // See if this is a linked event (with an <a> tag) or not (just <h3> and <h6> tags)
+    /* Convert the end time ("3:00pm") to the format "3:00 PM" */
+    if (eventInfoArray.length > 1 && eventInfoArray[1].trim() != "") {
+
+        /* If the whole string is like " - Thru 2/5/2016", we just want the date
+         * portion of it.  Otherwise, if the whole string is like "8:30am - Gym",
+         * then the second element is actually the LOCATION, not the end time.
+         * Otherwise, the second element is the end time. 
+         */
+        if (eventInfoArray[1].toLowerCase().indexOf("thru") != -1) {
+            eventInfo.endTime = eventInfoArray[1].trim().split(" ")[1].trim();
+        } else if (eventInfoArray[1].toLowerCase().indexOf("am") == -1 &&
+            eventInfoArray[1].toLowerCase().indexOf("pm") == -1) { 
+            eventInfo.eventLocation = eventInfoArray[1].trim();
+        } else {
+            var endTime = eventInfoArray[1].trim().toUpperCase();
+            eventInfo.endTime = endTime.substring(0, endTime.length - 2) + " " +
+                            endTime.substring(endTime.length - 2);
+        }
+    }
+
+    /* Get the event location */
+    if (eventInfoArray.length > 2 && eventInfoArray[2].trim() != "") {
+        eventInfo.eventLocation = eventInfoArray[2].trim();
+    }
+
+    /* See if this is a linked event (w/ <a> tag) or not
+     * (just h3 and h6 tags).
+     */
     var linkSearchResults = calendarEvent.find("a");
-    var link = linkSearchResults.length > 0 ? $(linkSearchResults[0]) : undefined;
-    if(link && h6EventInfo) {
-        // Event name is the full link text minus the event time/location
+    var link = linkSearchResults.length > 0 ? $(linkSearchResults[0]) :
+                undefined;
+    if (link && h6EventInfo) {
+        /* Event name is the full link text minus the event time/location */
         eventInfo.eventName = link.text().split(h6EventInfo.text())[0].trim();
-    } else if(link) {
+    } else if (link) {
+        /* Event name is just the link text */
         eventInfo.eventName = link.text().trim();
     } else {
+        /* No link and no description header */
         eventInfo.eventName = $(calendarEvent.find("h3")[0]).text().trim();
     }
-
-    console.log("Scraping Upper School event: " + eventInfo.eventName);
 
     return eventInfo;
 }
 
 
-/* FUNCTION: scrapeAthleticsCalendarDay
--------------------------------------
+/* FUNCTION: scrapeAthleticsCalendar
+----------------------------------------
 Parameters:
-    calendarDay - the DOM element for a single day in the Athletics calendar.
-    $ - the Cheerio object to use to traverse this DOM
-    ATHLETICS_TEAMS - the map of teamID strings to team names.
+    calendar - the DOM element for a single athletics calendar.
+    $ - the Cheerio DOM parser for this calendar.
+    athleticsTeamsMap - a map from teamID strings to team name strings
+                        for all the teams included in the calendar.
 
-Returns: a promise passing along the JS representation of this day.  The data
-        format is as follows:
+Returns: a JS array of day objects for the given calendar.
+Each object in the array has the following properties:
 
 {
     "month": "September",
@@ -329,50 +372,137 @@ Returns: a promise passing along the JS representation of this day.  The data
     ]
 }
 
-The JS dictonary format for each event is defined by the return value of
-the scrapeAthleticsCalendarEvent function.  Because of the way dates are
-displayed, we're not able to get the full date from the calendar day itself.  
-Instead, we have to get the date out of scraping a calendar event.  All events
-within a given day are scraped in parallel.
+Each day dictionary has an array of event dictionaries, where the event
+dictionary format is the following:
+
+{
+    "eventID": 12543,
+    "eventName": null,
+    "teamName": "Girls' Varsity Soccer",
+    "teamID": 12542,
+    "opponent": "Froggie School",
+    "startTime": "3:00 PM",
+    "endTime": "4:00 PM",
+    "dismissalTime": "2:00 PM",
+    "returnTime": "5:00 PM",
+    "isHome": false,
+    "eventAddress": "1254 Lakeside Dr. Potomac, MD 20156"
+    "eventLocation": null
+}
+
+eventID, teamName, teamID and isHome are guaranteed to be non-null.
+eventID is a unique ID.  eventAddress is a mappable address.
+eventLocation is only the name of a place.  Note that isHome can be true and
+there can be a non-null eventLocation and eventAddress if the game is played at
+a home facility besides the main school campus.  eventName is the special name
+for this event (if any - most games will not have one, but some, such as cross
+country meets, have names like "Cross Country Invitational".)
+----------------------------------------
+*/
+function scrapeAthleticsCalendar(calendar, $, athleticsTeamsMap) {
+
+    var calendarDaysData = [];
+    calendar.find('.calendar-day').each(function(index, elem) {
+        var savedThis = this;
+        calendarDaysData.push(scrapeAthleticsCalendarDay($(savedThis), $,
+            athleticsTeamsMap));
+    });
+
+    return calendarDaysData;
+}
+
+
+/* FUNCTION: scrapeAthleticsCalendarDay
+-------------------------------------
+Parameters:
+    calendarDay - the DOM element for a single day in the Athletics calendar.
+    $ - the Cheerio object to use to traverse this DOM
+    athleticsTeamsMap - the map of teamID strings to team names.
+
+Returns: a promise passing along the a JS object with the following properties:
+
+{
+    "month": "September",
+    "date": 9,
+    "day": "Wednesday",
+    "year": 2015,
+    "events": [
+        ...
+    ]
+}
+
+Each day dictionary has an array of event dictionaries, where the event
+dictionary format is the following:
+
+{
+    "eventID": 12543,
+    "eventName": null,
+    "teamName": "Girls' Varsity Soccer",
+    "teamID": 12542,
+    "opponent": "Froggie School",
+    "startTime": "3:00 PM",
+    "endTime": "4:00 PM",
+    "dismissalTime": "2:00 PM",
+    "returnTime": "5:00 PM",
+    "isHome": false,
+    "eventAddress": "1254 Lakeside Dr. Potomac, MD 20156"
+    "eventLocation": null
+}
+
+eventID, teamName, teamID and isHome are guaranteed to be non-null.
+eventID is a unique ID.  eventAddress is a mappable address.
+eventLocation is only the name of a place.  Note that isHome can be true and
+there can be a non-null eventLocation and eventAddress if the game is played at
+a home facility besides the main school campus.  eventName is the special name
+for this event (if any - most games will not have one, but some, such as cross
+country meets, have names like "Cross Country Invitational".)
+
+Because of the way dates are displayed, we're not able to get the full date from
+the calendar day itself.  Instead, we have to get the date out of scraping a
+calendar event's detail page.  All events within a given day are scraped in
+parallel.
 --------------------------------------
 */
-function scrapeAthleticsCalendarDay(calendarDay, $, ATHLETICS_TEAMS) {
-
-    // Make the JSON object for this day (list of events,
-    // and date information that's added later)
-    var calendarDayInfo = {
-        month: null,
-        date: null,
-        day: null,
-        year: null,
-        events: []
-    };
+function scrapeAthleticsCalendarDay(calendarDay, $, athleticsTeamsMap) {
 
     var promises = [];
 
+    /* Parse each event listed on this day (each dd elem) */
     calendarDay.find("dd").each(function(i, elem) {
         var savedThis = this;
         var dd = $(savedThis);
 
-        // If this event's been cancelled, ignore it
-        var cancelledString = $(dd.find("h4 .cancelled")[0]).text().trim();
-        if(cancelledString !== "") return;
+        /* If this event's been cancelled, ignore it */
+        if (dd.children().first().children().first().hasClass("cancelled")) {
+            return;
+        }
 
-        promises.push(scrapeAthleticsCalendarEvent(dd, $, ATHLETICS_TEAMS));
+        promises.push(scrapeAthleticsCalendarEvent(dd, $, athleticsTeamsMap));
     });
 
     return Promise.all(promises).then(function(eventsInfo) {
+
+        /* Make the JSON object for this day (list of events,
+         * and date information that's added later). */
+        var calendarDayInfo = {
+            month: null,
+            date: null,
+            day: null,
+            year: null,
+            events: []
+        };
+
         eventsInfo.forEach(function(info) {
 
-            // If it's non-null, then we should add it to our list
-            if(info) {
+            /* If it's non-null, then we should add it to our list */
+            if (info) {
 
-                // Unpack the JS objects containing info
+                /* Unpack the JS objects containing info */
                 var eventInfo = info.eventInfo;
                 calendarDayInfo.events.push(eventInfo);
 
-                // If we haven't added the date yet, add it
-                if(!calendarDayInfo.month) {
+                /* If we haven't added the date yet, add it */
+                if (!calendarDayInfo.month) {
                     var dateInfo = info.dateInfo;
                     calendarDayInfo.month = dateInfo.month;
                     calendarDayInfo.date = dateInfo.date;
@@ -393,20 +523,20 @@ Parameters:
     calendarEvent - the DOM element representing a single calendar event from
                 the Athletics calendar.
     $ - the Cheerio object to use to traverse this DOM
-    ATHLETICS_TEAMS - a dictionary of teamID (string) to team name (string).  Used to
-                look up team names and make sure we scrape only the right events.
+    athleticsTeamsMap - a dictionary of teamID (string) to team name (string).
+                        Used to look up team names.
 
-Returns: a JSON representation of the information about this event.
-        The JSON returned has the format:
+Returns: an event object containing the following properties:
 
 {
     "eventInfo": {
         "eventID": 12546,
         "eventName": null,
-        "maretTeam": "Girls' Varsity Soccer",
-        "maretTeamID": 52235,
+        "teamName": "Girls' Varsity Soccer",
+        "teamID": 52235,
         "opponent": "Froggie School",
         "startTime": "3:00 PM",
+        "endTime": "4:00 PM",
         "dismissalTime": "2:00 PM",
         "returnTime": "5:00 PM",
         "isHome": false,
@@ -421,28 +551,30 @@ Returns: a JSON representation of the information about this event.
     }
 }
 
-We return two objects - one containing information about the game itself, and 
-the other about the date on which it occurs (because the full date information is 
-only available on the event detail page).  For the dateInfo, all fields are 
-guaranteed non-null.  For the eventInfo, eventID, maretTeam, maretTeamID and isHome are guaranteed 
-to be non-null.  eventID is a unique ID.  eventAddress is a mappable address.  
-eventLocation is only the name of a place (e.g. Jelleff).  Note that isHome can be 
-true with a non-null eventLocation and eventAddress if the game is played at a home 
-facility besides the main school campus.  eventName is the special name for this 
-event (if any - most games will not have one, but some, such as cross country meets, 
-have names like "Cross Country Invitational".)
+We return two sub-objects - one containing information about the athletic event
+itself, and the other about the date on which it occurs.  For the dateInfo, all
+fields are guaranteed non-null.  For the eventInfo object eventID, teamName,
+teamID and isHome are guaranteed to be non-null.  eventID is a unique ID.
+eventAddress is a mappable address.  eventLocation is only the name of a place
+(e.g. Jelleff).  Note that isHome can be true with a non-null eventLocation and
+eventAddress if the game is played at a home facility besides the main school
+campus.  eventName is the special name for this event (if any - most games will
+not have one, but some, such as cross country meets, have names like "Cross
+Country Invitational".)
 -----------------------------------------
+todo: finish
 */
-function scrapeAthleticsCalendarEvent(calendarEvent, $, ATHLETICS_TEAMS) {
+function scrapeAthleticsCalendarEvent(calendarEvent, $, athleticsTeamsMap) {
 
     var info = {
         eventInfo: {
             eventID: null,
             eventName: null,
-            maretTeam: null,
-            maretTeamID: null,
+            teamName: null,
+            teamID: null,
             opponent: null,
             startTime: null,
+            endTime: null,
             dismissalTime: null,
             returnTime:null,
             isHome: calendarEvent.hasClass("home"),
@@ -459,49 +591,52 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $, ATHLETICS_TEAMS) {
 
     var detailPageURL = calendarEvent.find("a").attr("href");
 
-    // Use the teamID in the URL to get the team name - 
+    // Use the teamID in the URL to get the team name -
     // and return if we don't know the team
-    var teamID = parseInt(getParameterByName(detailPageURL, "TeamID"));
-    if(ATHLETICS_TEAMS[teamID]) {
-        info.eventInfo.maretTeam = ATHLETICS_TEAMS[teamID];
-        info.eventInfo.maretTeamID = teamID;
-    } else {
-        return Promise.resolve();
-    }
+    var teamID = parseInt(util.getParameterByName(detailPageURL, "TeamID"));
+    info.eventInfo.teamName = athleticsTeamsMap[teamID];
+    info.eventInfo.teamID = teamID;
 
     // Get the eventID
-    info.eventInfo.eventID = parseInt(getParameterByName(detailPageURL, "LinkID"));
+    info.eventInfo.eventID = parseInt(util.getParameterByName(detailPageURL,
+        "LinkID"));
 
     // Get the rest of the info from the detail page
-    return getURL(MARET_URL_BASE + detailPageURL).then(function(html) {
+    return getURL(util.constants.MARET_URL_BASE +
+        detailPageURL).then(function(html) {
 
         $ = cheerio.load(html);
 
-        // Parse the full date string (e.g. "Thursday, September 10, 2015")
+        // Parse the full date string (e.g. "Thursday, September 10, 2015"),
+        // removing commas from the ends of the day name and number
         var dateString = $(".calendar-detail .date").text().trim();
         var dateComponents = dateString.split(" ");
-        info.dateInfo.day = dateComponents[0].substr(0, dateComponents[0].length - 1);
+        info.dateInfo.day = dateComponents[0].slice(0, -1);
         info.dateInfo.month = dateComponents[1];
-        info.dateInfo.date = parseInt(dateComponents[2].substr(0, dateComponents[2].length - 1));
+        info.dateInfo.date = parseInt(dateComponents[2].slice(0, -1));
         info.dateInfo.year = parseInt(dateComponents[3]);
 
-        // e.g. "Varsity Golf vs. Potomac School"
+        // e.g. "Varsity Golf vs. Potomac School".  Remove span text (if any)
         var gameTitleString = $(".calendar-detail h1").text().trim();
-        console.log("Scraping athletics event: " + gameTitleString);
+        if ($(".calendar-detail h1").children().length > 0) {
+            var textToRemove = $(".calendar-detail h1").children().text();
+            gameTitleString = gameTitleString.replace(textToRemove, "");
+        }
 
-        // Check if there's a game location attached (e.g. "team at team at Wilson" or
-        // "team vs. team at Wilson")
+        // Check if there's a game location attached
+        // (e.g. "team at team at Wilson" or "team vs. team at Wilson")
         var hasEventLocation = (gameTitleString.match(/ at /g) || []).length > 1;
-        hasEventLocation = hasEventLocation || (gameTitleString.indexOf(" at ") != -1 && 
-            gameTitleString.indexOf(" vs. ") != -1);
+        hasEventLocation = hasEventLocation ||
+            (gameTitleString.indexOf(" at ") != -1 &&
+                gameTitleString.indexOf(" vs. ") != -1);
 
-        // Parse the game title down to just the team names.  Check if there's a dash
-        // (meaning there's an event name) or hasEventLocation is true
-        if(gameTitleString.indexOf(" - ") != -1) {
+        // Parse the game title down to just the team names.  Check if there's a
+        // dash (meaning there's an event name) or hasEventLocation is true
+        if (gameTitleString.indexOf(" - ") != -1) {
             var dashComponents = gameTitleString.split(" - ");
             gameTitleString = dashComponents[0].trim();
             info.eventInfo.eventName = dashComponents[1].trim();
-        } else if(hasEventLocation) {
+        } else if (hasEventLocation) {
             var atIndex = gameTitleString.lastIndexOf(" at ");
             info.eventInfo.eventLocation = gameTitleString.substring(atIndex + " at ".length).trim();
             gameTitleString = gameTitleString.substring(0, atIndex).trim();
@@ -509,30 +644,29 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $, ATHLETICS_TEAMS) {
 
         // Parse the team names by splitting by " vs. " or " at "
         var teamNames;
-        if(gameTitleString.indexOf(" vs. ") != -1) {
+        if (gameTitleString.indexOf(" vs. ") != -1) {
             teamNames = gameTitleString.split(" vs. ");
-        } else if(gameTitleString.indexOf(" at ") != -1) {
+        } else if (gameTitleString.indexOf(" at ") != -1) {
             teamNames = gameTitleString.split(" at ");
         } else teamNames = [gameTitleString];
 
         // We get the Maret team name from the teamID, so we just need the opponent
-        if(teamNames.length > 1) info.eventInfo.opponent = teamNames[1].trim();
+        if (teamNames.length > 1) info.eventInfo.opponent = teamNames[1].trim();
 
         // Convert the game time string ("Time: 4:00PM") to "4:00 PM"
         var timeString = $(".calendar-detail .time").text().trim();
-        if(timeString != "") {
+        if (timeString != "") {
             timeString = timeString.split("Time:")[1];
 
             // If it's a time range, just get the start time
             timeString = timeString.split(" - ")[0].trim();
-            
             info.eventInfo.startTime = timeString.substring(0, timeString.length - 2) + " " +
                 timeString.substring(timeString.length - 2);
         }
 
         // Convert the dismissal time string ("Dismissal: 2:40PM") to "2:40 PM"
         var dismissalString = $(".calendar-detail .dismissal").text().trim();
-        if(dismissalString != "") {
+        if (dismissalString != "") {
             dismissalString = dismissalString.split("Dismissal:")[1].trim();
             info.eventInfo.dismissalTime = dismissalString.substring(0, dismissalString.length - 2) + " " +
                 dismissalString.substring(dismissalString.length - 2);
@@ -540,7 +674,7 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $, ATHLETICS_TEAMS) {
 
         // Convert the return time string ("Return: 6:00PM") to "6:00 PM"
         var returnString = $(".calendar-detail .return").text().trim();
-        if(returnString != "") {
+        if (returnString != "") {
             returnString = returnString.split("Return:")[1].trim();
             info.eventInfo.returnTime = returnString.substring(0, returnString.length - 2) + " " +
                 returnString.substring(returnString.length - 2);
@@ -548,7 +682,7 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $, ATHLETICS_TEAMS) {
 
         // If there's an address field, scrape the address
         var addressString = $(".calendar-detail address").text().trim();
-        if(addressString != "") {
+        if (addressString != "") {
             info.eventInfo.eventAddress = addressString;
         }
 
@@ -557,27 +691,13 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $, ATHLETICS_TEAMS) {
 }
 
 
-/* FUNCTION: getParameterByName
---------------------------------
-Parameters:
-    url - the url to search in
-    name - the name of the URL parameter to get the value for
-
-Returns: the value of the given parameter in the given url (returns null
-        if the parameter wasn't found)
-
-Thanks to http://stackoverflow.com/questions/901115/how-can-i-get-query-string-values-in-javascript
---------------------------------
-*/
-function getParameterByName(url, name) {
-    name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
-    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
-        results = regex.exec(url);
-    return results === null ? null : decodeURIComponent(results[1].replace(/\+/g, " "));
-}
-
-
-// Start the server
-app.listen(app.get('port'), function() {
-    console.log('Node app is running on port', app.get('port'));
-});
+/* Exports */
+module.exports.scrapeAthleticsTeams = scrapeAthleticsTeams;
+module.exports.scrapeAthleticsTeamsDOM = scrapeAthleticsTeamsDOM;
+module.exports.scrapeCalendars = scrapeCalendars;
+module.exports.scrapeSchoolCalendar = scrapeSchoolCalendar;
+module.exports.scrapeSchoolCalendarDay = scrapeSchoolCalendarDay;
+module.exports.scrapeSchoolCalendarEvent = scrapeSchoolCalendarEvent;
+module.exports.scrapeAthleticsCalendar = scrapeAthleticsCalendar;
+module.exports.scrapeAthleticsCalendarDay = scrapeAthleticsCalendarDay;
+module.exports.scrapeAthleticsCalendarEvent = scrapeAthleticsCalendarEvent;
