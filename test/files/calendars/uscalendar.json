@@ -1,0 +1,226 @@
+[
+	{
+		"month": "March",
+		"date": 21,
+		"day": "Monday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "SPRING BREAK",
+				"startTime": null,
+				"endTime": "3/27/2016",
+				"eventLocation": null
+			}
+		]
+	},
+	{
+		"month": "March",
+		"date": 29,
+		"day": "Tuesday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "Classes Resume (Mon Sched)",
+				"startTime": null,
+				"endTime": null,
+				"eventLocation": null
+			},
+			{
+				"eventName": "US Day of Dialogue",
+				"startTime": "8:10 AM",
+				"endTime": "3:10 PM",
+				"eventLocation": "Other,Theatre"
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 6,
+		"day": "Wednesday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "New US Student Course Registration",
+				"startTime": null,
+				"endTime": null,
+				"eventLocation": null
+			},
+			{
+				"eventName": "MPA General Meeting",
+				"startTime": "8:15 AM",
+				"endTime": "9:30 AM",
+				"eventLocation": "Movement Studio"
+			},
+			{
+				"eventName": "9th Grade Service Learning Trip to Martha's Table",
+				"startTime": "2:30 PM",
+				"endTime": "7:30 PM",
+				"eventLocation": "Off Campus"
+			},
+			{
+				"eventName": "ISCF Small Ensemble (at Sidwell)",
+				"startTime": "8:00 PM",
+				"endTime": null,
+				"eventLocation": null
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 9,
+		"day": "Saturday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "ACT",
+				"startTime": null,
+				"endTime": null,
+				"eventLocation": null
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 13,
+		"day": "Wednesday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "WAIS College Fair for Juniors at Georgetown Preparatory School",
+				"startTime": "6:00 PM",
+				"endTime": "8:00 PM",
+				"eventLocation": "Off Campus"
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 15,
+		"day": "Friday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "Day of Silence",
+				"startTime": null,
+				"endTime": null,
+				"eventLocation": null
+			},
+			{
+				"eventName": "US Film/Music Festival",
+				"startTime": "7:00 PM",
+				"endTime": "9:00 PM",
+				"eventLocation": "Back Field"
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 16,
+		"day": "Saturday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "I Drive Smart Driving Class-Room AC263",
+				"startTime": "9:00 AM",
+				"endTime": "12:15 PM",
+				"eventLocation": "Other"
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 18,
+		"day": "Monday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "Car Count Week 3",
+				"startTime": null,
+				"endTime": "4/22/2016",
+				"eventLocation": null
+			},
+			{
+				"eventName": "Civil Liberties Class Trip to DC Superior Court",
+				"startTime": "5:45 PM",
+				"endTime": "7:00 PM",
+				"eventLocation": "Off Campus"
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 19,
+		"day": "Tuesday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "Comparative Religion Class Trip to the Shambhala Center",
+				"startTime": "11:45 AM",
+				"endTime": "12:50 PM",
+				"eventLocation": "Off Campus"
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 20,
+		"day": "Wednesday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "Race Card Project",
+				"startTime": "6:30 PM",
+				"endTime": "8:30 PM",
+				"eventLocation": "Theatre"
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 22,
+		"day": "Friday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "Earth Day",
+				"startTime": null,
+				"endTime": null,
+				"eventLocation": null
+			},
+			{
+				"eventName": "Alumni Panels",
+				"startTime": null,
+				"endTime": null,
+				"eventLocation": null
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 23,
+		"day": "Saturday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "I Drive Smart Class-Room AC263",
+				"startTime": "9:00 AM",
+				"endTime": "12:15 PM",
+				"eventLocation": "Other"
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 25,
+		"day": "Monday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "US Orchestra Concert",
+				"startTime": "7:00 PM",
+				"endTime": "9:00 PM",
+				"eventLocation": "Theatre"
+			}
+		]
+	}
+]

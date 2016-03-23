@@ -1,0 +1,227 @@
+[
+	{
+	    "teamName": "Cross Country",
+	    "teamID": 1185,
+	    "season": "Fall"    
+	},
+	{
+	    "teamName": "Varsity Football",
+	    "teamID": 1199,
+	    "season": "Fall"    
+	},
+	{
+	    "teamName": "MS Football - Ltwt.",
+	    "teamID": 1201,
+	    "season": "Fall"    
+	},
+	{
+	    "teamName": "MS Football - heavywt",
+	    "teamID": 1202,
+	    "season": "Fall"    
+	},
+	{
+	    "teamName": "JV Football",
+	    "teamID": 1200,
+	    "season": "Fall"    
+	},
+	{
+	    "teamName": "Varsity Golf",
+	    "teamID": 1186,
+	    "season": "Fall"    
+	},
+	{
+	    "teamName": "Boys' Varsity Soccer",
+	    "teamID": 1208,
+	    "season": "Fall"    
+	},
+	{
+	    "teamName": "Girls' Varsity Soccer",
+	    "teamID": 1224,
+	    "season": "Fall"    
+	},
+	{
+	    "teamName": "Boys' MS B Soccer",
+	    "teamID": 1211,
+	    "season": "Fall"    
+	},
+	{
+	    "teamName": "Girls' MS B Soccer",
+	    "teamID": 1227,
+	    "season": "Fall"    
+	},
+	{
+	    "teamName": "Boys' MS A Soccer",
+	    "teamID": 1210,
+	    "season": "Fall"    
+	},
+	{
+	    "teamName": "Girls' MS A Soccer",
+	    "teamID": 1226,
+	    "season": "Fall"    
+	},
+	{
+	    "teamName": "Boys' JV Soccer",
+	    "teamID": 1209,
+	    "season": "Fall"    
+	},
+	{
+	    "teamName": "Girls' JV Soccer",
+	    "teamID": 1225,
+	    "season": "Fall"    
+	},
+	{
+	    "teamName": "Girls' Varsity Tennis",
+	    "teamID": 1233,
+	    "season": "Fall"    
+	},
+	{
+	    "teamName": "Varsity Volleyball",
+	    "teamID": 1234,
+	    "season": "Fall"    
+	},
+	{
+	    "teamName": "MS B Volleyball",
+	    "teamID": 1237,
+	    "season": "Fall"    
+	},
+	{
+	    "teamName": "MS A Volleyball",
+	    "teamID": 1236,
+	    "season": "Fall"    
+	},
+	{
+	    "teamName": "JV Volleyball",
+	    "teamID": 1235,
+	    "season": "Fall"    
+	},
+	{
+	    "teamName": "Boys' Varsity Basketball",
+	    "teamID": 1195,
+	    "season": "Winter"    
+	},
+	{
+	    "teamName": "Girls' Varsity Basketball",
+	    "teamID": 1216,
+	    "season": "Winter"    
+	},
+	{
+	    "teamName": "Boys' MS B Basketball",
+	    "teamID": 1198,
+	    "season": "Winter"    
+	},
+	{
+	    "teamName": "Girls' MS B Basketball",
+	    "teamID": 1219,
+	    "season": "Winter"    
+	},
+	{
+	    "teamName": "Boys' MS A Basketball",
+	    "teamID": 1197,
+	    "season": "Winter"    
+	},
+	{
+	    "teamName": "Girls' MS A Basketball",
+	    "teamID": 1218,
+	    "season": "Winter"    
+	},
+	{
+	    "teamName": "Boys' JV Basketball",
+	    "teamID": 1196,
+	    "season": "Winter"    
+	},
+	{
+	    "teamName": "Girls' JV Basketball",
+	    "teamID": 1217,
+	    "season": "Winter"    
+	},
+	{
+	    "teamName": "Varsity Swimming",
+	    "teamID": 1187,
+	    "season": "Winter"    
+	},
+	{
+	    "teamName": "Varsity Wrestling",
+	    "teamID": 1213,
+	    "season": "Winter"    
+	},
+	{
+	    "teamName": "MS Wrestling",
+	    "teamID": 1215,
+	    "season": "Winter"    
+	},
+	{
+	    "teamName": "Varsity Baseball",
+	    "teamID": 1191,
+	    "season": "Spring"    
+	},
+	{
+	    "teamName": "Boys' MS B Baseball",
+	    "teamID": 1194,
+	    "season": "Spring"    
+	},
+	{
+	    "teamName": "Boys' MS A Baseball",
+	    "teamID": 1193,
+	    "season": "Spring"    
+	},
+	{
+	    "teamName": "JV Baseball",
+	    "teamID": 1192,
+	    "season": "Spring"    
+	},
+	{
+	    "teamName": "Boys' Varsity Lacrosse",
+	    "teamID": 1203,
+	    "season": "Spring"    
+	},
+	{
+	    "teamName": "Girls' Varsity Lacrosse",
+	    "teamID": 1220,
+	    "season": "Spring"    
+	},
+	{
+	    "teamName": "Boys' MS B Lacrosse",
+	    "teamID": 1206,
+	    "season": "Spring"    
+	},
+	{
+	    "teamName": "MS B Girls' Lacrosse",
+	    "teamID": 1223,
+	    "season": "Spring"    
+	},
+	{
+	    "teamName": "Boys' MS A Lacrosse",
+	    "teamID": 1205,
+	    "season": "Spring"    
+	},
+	{
+	    "teamName": "Girls' MS A Lacrosse",
+	    "teamID": 1222,
+	    "season": "Spring"    
+	},
+	{
+	    "teamName": "Varsity Softball",
+	    "teamID": 1228,
+	    "season": "Spring"    
+	},
+	{
+	    "teamName": "Girls' MS B Softball",
+	    "teamID": 1231,
+	    "season": "Spring"    
+	},
+	{
+	    "teamName": "Girls' MS A Softball",
+	    "teamID": 1230,
+	    "season": "Spring"    
+	},
+	{
+	    "teamName": "Boys' Varsity Tennis",
+	    "teamID": 1212,
+	    "season": "Spring"    
+	},
+	{
+	    "teamName": "Varsity Track and Field",
+	    "teamID": 1188,
+	    "season": "Spring"    
+	}
+]

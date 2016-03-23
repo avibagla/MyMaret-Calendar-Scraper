@@ -1,0 +1,242 @@
+[
+	{
+		"month": "March",
+		"date": 21,
+		"day": "Monday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "SPRING BREAK",
+				"startTime": null,
+				"endTime": "3/27/2016",
+				"eventLocation": null
+			}
+		]
+	},
+	{
+		"month": "March",
+		"date": 29,
+		"day": "Tuesday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "Classes Resume (Mon Sched)",
+				"startTime": null,
+				"endTime": null,
+				"eventLocation": null
+			},
+			{
+				"eventName": "1st Grade Trip to Kennedy Recreation Center",
+				"startTime": "11:30 AM",
+				"endTime": "1:30 PM",
+				"eventLocation": "Off Campus"
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 4,
+		"day": "Monday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "3rd Grade Service Learning Trip to Martha's Table",
+				"startTime": "10:00 AM",
+				"endTime": "10:45 AM",
+				"eventLocation": "Off Campus"
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 6,
+		"day": "Wednesday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "MPA General Meeting",
+				"startTime": "8:15 AM",
+				"endTime": "9:30 AM",
+				"eventLocation": "Movement Studio"
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 7,
+		"day": "Thursday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "First Grade Trip to the Anacostia River",
+				"startTime": "8:30 AM",
+				"endTime": "12:00 PM",
+				"eventLocation": "Off Campus"
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 8,
+		"day": "Friday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "LS Parent Coffee",
+				"startTime": "8:00 AM",
+				"endTime": "9:00 AM",
+				"eventLocation": "Library Lower School"
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 11,
+		"day": "Monday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "1st Grade Service Learning Trip to Martha's Table",
+				"startTime": "10:00 AM",
+				"endTime": "10:45 AM",
+				"eventLocation": "Off Campus"
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 14,
+		"day": "Thursday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "1st Grade Trip to Rosedale Community Center",
+				"startTime": "11:30 AM",
+				"endTime": "2:00 PM",
+				"eventLocation": "Off Campus"
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 16,
+		"day": "Saturday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "Maret Fun Run-Front Lawn",
+				"startTime": "8:00 AM",
+				"endTime": "10:00 AM",
+				"eventLocation": "Front Lawn"
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 18,
+		"day": "Monday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "Car Count Week 3",
+				"startTime": null,
+				"endTime": "4/22/2016",
+				"eventLocation": null
+			},
+			{
+				"eventName": "1st Grade Service Learning Trip to Martha's Table",
+				"startTime": "10:00 AM",
+				"endTime": "10:45 AM",
+				"eventLocation": "Off Campus"
+			},
+			{
+				"eventName": "4th Grade Trip to Politics and Prose Bookstore",
+				"startTime": "10:00 AM",
+				"endTime": "12:00 PM",
+				"eventLocation": "Off Campus"
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 19,
+		"day": "Tuesday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "Kindergarten Trip to Politics and Prose Bookstore",
+				"startTime": "10:00 AM",
+				"endTime": "12:00 PM",
+				"eventLocation": "Off Campus"
+			},
+			{
+				"eventName": "2nd Gr Trip to Smithsonian Gardens Ripley Center",
+				"startTime": "12:00 PM",
+				"endTime": "1:05 PM",
+				"eventLocation": "Off Campus"
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 20,
+		"day": "Wednesday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "Race Card Project",
+				"startTime": "6:30 PM",
+				"endTime": "8:30 PM",
+				"eventLocation": "Theatre"
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 22,
+		"day": "Friday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "Earth Day",
+				"startTime": null,
+				"endTime": null,
+				"eventLocation": null
+			},
+			{
+				"eventName": "1st Grade Trip to Clemyjontri Playground",
+				"startTime": "11:30 AM",
+				"endTime": "2:00 PM",
+				"eventLocation": "Off Campus"
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 25,
+		"day": "Monday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "1st Grade Service Learning Trip to Martha's Table",
+				"startTime": "10:00 AM",
+				"endTime": "10:45 AM",
+				"eventLocation": "Off Campus"
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 27,
+		"day": "Wednesday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "3rd Gr. Trip to George Mason University",
+				"startTime": "9:30 AM",
+				"endTime": "12:30 PM",
+				"eventLocation": "Off Campus"
+			}
+		]
+	}
+]

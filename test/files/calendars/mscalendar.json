@@ -1,0 +1,202 @@
+[
+	{
+		"month": "March",
+		"date": 21,
+		"day": "Monday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "SPRING BREAK",
+				"startTime": null,
+				"endTime": "3/27/2016",
+				"eventLocation": null
+			}
+		]
+	},
+	{
+		"month": "March",
+		"date": 29,
+		"day": "Tuesday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "Classes Resume (Mon Sched)",
+				"startTime": null,
+				"endTime": null,
+				"eventLocation": null
+			},
+			{
+				"eventName": "MS Musical Rehearsal",
+				"startTime": "3:30 PM",
+				"endTime": "5:30 PM",
+				"eventLocation": "Theatre"
+			}
+		]
+	},{
+		"month": "March",
+		"date": 30,
+		"day": "Wednesday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "8th Grade Service Learning Trip to the Mazique Center",
+				"startTime": "11:00 AM",
+				"endTime": "12:20 PM",
+				"eventLocation": "Off Campus"
+			},
+			{
+				"eventName": "6th Grade Service Learning Trip to SOME",
+				"startTime": "12:20 PM",
+				"endTime": "3:30 PM",
+				"eventLocation": "Off Campus"
+			}
+		]
+	},{
+		"month": "March",
+		"date": 31,
+		"day": "Thursday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "MS Musical Rehearsal",
+				"startTime": "3:30 PM",
+				"endTime": "5:30 PM",
+				"eventLocation": "Theatre"
+			}
+		]
+	},{
+		"month": "April",
+		"date": 1,
+		"day": "Friday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "7th Grade Service Learning Trip to Rock Creek Park",
+				"startTime": "10:35 AM",
+				"endTime": "12:10 PM",
+				"eventLocation": "Off Campus"
+			},
+			{
+				"eventName": "MS Musical Build",
+				"startTime": "3:30 PM",
+				"endTime": "6:00 PM",
+				"eventLocation": "Theatre"
+			}
+		]
+	},{
+		"month": "April",
+		"date": 2,
+		"day": "Saturday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "MS Musical Rehearsal",
+				"startTime": "11:00 AM",
+				"endTime": "2:00 PM",
+				"eventLocation": "Theatre"
+			},
+			{
+				"eventName": "MS Musical Build",
+				"startTime": "2:00 PM",
+				"endTime": "6:00 PM",
+				"eventLocation": "Theatre"
+			}
+		]
+	},{
+		"month": "April",
+		"date": 3,
+		"day": "Sunday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "MS Musical Rehearsal",
+				"startTime": "2:00 PM",
+				"endTime": "5:00 PM",
+				"eventLocation": "Theatre"
+			}
+		]
+	},
+	{
+		"month": "April",
+		"date": 4,
+		"day": "Monday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "MS Musical Rehearsal",
+				"startTime": "3:30 PM",
+				"endTime": "5:30 PM",
+				"eventLocation": "Theatre"
+			}
+		]
+	},{
+		"month": "April",
+		"date": 5,
+		"day": "Tuesday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "6th Gr Trip to Politics and Prose",
+				"startTime": "10:30 AM",
+				"endTime": "11:15 AM",
+				"eventLocation": "Off Campus"
+			},
+			{
+				"eventName": "MS Musical Rehearsal",
+				"startTime": "4:30 PM",
+				"endTime": "5:59 PM",
+				"eventLocation": "Theatre"
+			},
+			{
+				"eventName": "Rising 9th Grade Parent Meeting",
+				"startTime": "6:30 PM",
+				"endTime": "8:00 PM",
+				"eventLocation": "Atrium,Theatre"
+			}
+		]
+	},{
+		"month": "April",
+		"date": 6,
+		"day": "Wednesday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "MPA General Meeting",
+				"startTime": "8:15 AM",
+				"endTime": "9:30 AM",
+				"eventLocation": "Movement Studio"
+			},
+			{
+				"eventName": "8th Grade Service Learning Trip to the Mazique Center",
+				"startTime": "11:00 AM",
+				"endTime": "12:20 PM",
+				"eventLocation": "Off Campus"
+			},
+			{
+				"eventName": "6th Grade Service Learning Trip to SOME",
+				"startTime": "12:20 PM",
+				"endTime": "3:30 PM",
+				"eventLocation": "Off Campus"
+			},
+			{
+				"eventName": "MS Musical Rehearsal",
+				"startTime": "4:30 PM",
+				"endTime": "6:30 PM",
+				"eventLocation": "Theatre"
+			}
+		]
+	},{
+		"month": "April",
+		"date": 7,
+		"day": "Thursday",
+		"year": 2016,
+		"events": [
+			{
+				"eventName": "6th-Grade Overnight Trip to New York City",
+				"startTime": "7:00 AM",
+				"endTime": "7:30 PM",
+				"eventLocation": "Off Campus"
+			}
+		]
+	}
+]
