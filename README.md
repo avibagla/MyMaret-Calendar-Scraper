@@ -93,7 +93,7 @@ a home facility besides the main school campus.  eventName is the special name
 for this event (if any - most events will not have one, but some, such as cross
 country meets, have names like "Cross Country Invitational".)
 
-### GET /ScrapeAthleticsTeams
+### GET /scrapeAthleticsTeams
 
 This sends back an array of athletics teams objects sorted by season - Fall,
 then Winter, then Spring.  Each object contains the following properties 
