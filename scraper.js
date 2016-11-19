@@ -7,11 +7,12 @@ app.set('port', (process.env.PORT || 5000));
 
 
 var MARET_URL_BASE = "http://www.maret.org";
-var UPPER_SCHOOL_CALENDAR_URL = "https://www.maret.org/mobile/index.aspx?v=c&mid=120&t=Upper%20School";
+var UPPER_SCHOOL_CALENDAR_URL = "https://www.maret.org/fs/elements/6221";
 var ATHLETICS_CALENDAR_URL = "http://www.maret.org/athletics-center/index.aspx";
 
-var PARSE_CONFIG_URL = "https://" + process.env.PARSE_APP_ID + ":javascript-key=" + 
-                        process.env.PARSE_JAVASCRIPT_KEY + "@api.parse.com/1/config";
+var PARSE_CONFIG_URL = "http://localhost:5000/athletics"
+
+
 
 
 
@@ -89,8 +90,10 @@ app.get('/scrapeCalendars', function(req, res) {
         return config.params.ATHLETICS_TEAMS;
     }).then(function(ATHLETICS_TEAMS) {
 
+         //First, use a little ISO trick to format today's date into a SQL string
+         var today = new Date().toISOString().substring(0,10);
         // Scrape both the upper school and athletics calendars, and send back the parsed data
-        var upperSchoolCalendarPromise = scrapeMaretCalendar(UPPER_SCHOOL_CALENDAR_URL, scrapeUpperSchoolCalendarDay);
+        var upperSchoolCalendarPromise = scrapeMaretCalendar(UPPER_SCHOOL_CALENDAR_URL+"?cal_date="+today, scrapeUpperSchoolCalendarDay);
         var athleticsCalendarPromise = scrapeMaretCalendar(ATHLETICS_CALENDAR_URL, scrapeAthleticsCalendarDay, ATHLETICS_TEAMS);
 
         return Promise.all([upperSchoolCalendarPromise, athleticsCalendarPromise]).then(function(response) {
@@ -163,7 +166,7 @@ function scrapeMaretCalendar(calendarURL, scrapeCalendarDay, ATHLETICS_TEAMS) {
 
         // Gather up event data for each day in parallel
         var promises = [];
-        $('.calendar-day').each(function(index, elem) {
+        $('.fsCalendarDaybox').each(function(index, elem) {
             var savedThis = this;
 
             // Pass along the team names dictionary if there is one
@@ -208,31 +211,41 @@ function scrapeUpperSchoolCalendarDay(calendarDay, $) {
 
     // Make the JSON object for this day (list of events,
     // and date information that's added later)
+    var currDate = calendarDay.find($('.fsCalendarDate'));
+    console.log(currDate);
     var calendarDayInfo = {
-        month: null,
-        date: null,
-        day: null,
-        year: null,
+        month: currDate.data('month'),
+        date: currDate.data('day'),
+        day: currDate.find($('.fsCalendarDay')).text(),
+        year: currDate.data('year'),
         events: []
     };
 
+    // console.log(calendarDayInfo)
+
     var promises = [];
-    calendarDay.find("li").each(function(i, elem) {
-        var savedThis = this;
-        var li = $(savedThis);
+    
 
-        // First elem is date header
-        if(i == 0) {
-            calendarDayInfo.month = li.find(".month").text().trim();
-            calendarDayInfo.date = parseInt(li.find(".date").text());
-            calendarDayInfo.day = li.text().split(" - ")[1];
-            calendarDayInfo.year = parseInt(li.find(".year").text());
 
-        // Otherwise, call the given event parser to generate a dictionary
-        } else {
-            promises.push(scrapeUpperSchoolCalendarEvent(li, $));
-        }
-    });
+    // if(calendarDay.hasClass("fsStateHasEvents")){
+
+    // }
+    // calendarDay.find("li").each(function(i, elem) {
+    //     var savedThis = this;
+    //     var li = $(savedThis);
+
+    //     // First elem is date header
+    //     if(i == 0) {
+    //         calendarDayInfo.month = li.find(".month").text().trim();
+    //         calendarDayInfo.date = parseInt(li.find(".date").text());
+    //         calendarDayInfo.day = li.text().split(" - ")[1];
+    //         calendarDayInfo.year = parseInt(li.find(".year").text());
+
+    //     // Otherwise, call the given event parser to generate a dictionary
+    //     } else {
+    //         promises.push(scrapeUpperSchoolCalendarEvent(li, $));
+    //     }
+    // });
 
     return Promise.all(promises).then(function(eventsInfo) {
         calendarDayInfo.events = eventsInfo;
@@ -555,6 +568,49 @@ function scrapeAthleticsCalendarEvent(calendarEvent, $, ATHLETICS_TEAMS) {
         return info;
     });
 }
+
+/* ENDPOINT: athletics (TEMPORARY)
+--------------------------------
+An internal way to return a json blob of IDs to sports
+so that a parse url isn't needed. 
+*/
+
+app.get("/athletics", function(req, res){
+    res.json({
+        "params":
+            {
+            "1185":"Cross Country",
+            "1186":"Varsity Golf",
+            "1187":"Swimming Coed (Varsity)",
+            "1188":"Varsity Track",
+            "1189":"Ultimate Frisbee",
+            "1191":"Baseball Boys (Varsity)",
+            "1192":"JV Baseball",
+            "1195":"Basketball Boys (Varsity)",
+            "1196":"Basketball Boys (Junior Varsity)",
+            "1199":"Varsity Football",
+            "1200":"JV Football",
+            "1203":"Boys' Varsity Lacrosse",
+            "1204":"Boys' JV Lacrosse",
+            "1208":"Boys' Varsity Soccer",
+            "1209":"Boys' JV Soccer",
+            "1212":"Boys' Varsity Tennis",
+            "1213":"Wrestling Boys (Varsity)",
+            "1216":"Basketball Girls (Varsity)",
+            "1217":"Basketball Girls (Junior Varsity)",
+            "1220":"Girls' Varsity Lacrosse",
+            "1221":"Girls' JV Lacrosse",
+            "1224":"Girls' Varsity Soccer",
+            "1225":"Girls' JV Soccer",
+            "1228":"Varsity Softball",
+            "1229":"JV Softball",
+            "1232":"Swimming Girls (Varsity)",
+            "1233":"Girls' Varsity Tennis",
+            "1234":"Varsity Volleyball",
+            "1235":"JV Volleyball"
+        }
+    });
+});
 
 
 /* FUNCTION: getParameterByName
