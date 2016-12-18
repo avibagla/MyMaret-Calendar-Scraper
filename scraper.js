@@ -227,9 +227,9 @@ function scrapeUpperSchoolCalendarDay(calendarDay, $) {
     
 
 
-    // if(calendarDay.hasClass("fsStateHasEvents")){
+    if(calendarDay.hasClass("fsStateHasEvents")){
 
-    // }
+    }
     // calendarDay.find("li").each(function(i, elem) {
     //     var savedThis = this;
     //     var li = $(savedThis);
